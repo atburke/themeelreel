@@ -22,7 +22,14 @@ function App() {
             <CreateAccountPage />
           </Route>
           <Route path="/">
+          // temporary until we implement main page
             <Redirect to="/login" />
+          </Route>
+          <Route path="/listings">
+            <Redirect to="/login" />
+          </Route>
+          <Route path="/adminlistings">
+            <PriceListingAdminPage />
           </Route>
         </Switch>
       </div>
@@ -210,14 +217,144 @@ class PriceListingPage extends React.Component {
 }
 */
 
-/*
 class PriceListingAdminPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      priceListings: [],
+      token: ''
+    };
+
+    if (this.props.location) {
+      this.setState({token: this.props.location.state.token});
+    }
+
+    this.fetchListings();
+  }
+
+  fetchListings() {
+    axios({
+      method: 'get',
+      url: '/api/adminpricelistings',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      this.setState({priceListings: response.data.priceListings});
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else if (error.status === 403) {
+        // TODO: response for forbidden
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  updateListing(listing) {
+    axios({
+      method: 'post',
+      url: '/api/adminpricelistings/update',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      data: {
+        update: {
+          ingredientName: listing.ingredientName,
+          source: listing.source,
+          timeCreated: listing.timeCreated
+        },
+        set: {
+          price: listing.price
+        }
+      }
+    }).then(response => {
+      this.fetchListings();
+
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else if (error.status == 403) {
+        // TODO: forbidden response
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  deleteListing(listing) {
+    axios({
+      method: 'post',   // we could use delete, but eh
+      url: '/api/adminpricelistings/delete',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      data: {
+        ingredientName: listing.ingredientName,
+        source: listing.source,
+        timeCreated: listing.timeCreated
+      }
+    }).then(response => {
+      this.fetchListings();
+
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else if (error.status == 403) {
+        // TODO: forbidden response
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  setNewPrice(listing, price) {
+    this.setState({priceListings: this.state.priceListings.map(l => {
+      if (l.ingredientName === listing.ingredientName &&
+        l.source == listing.source &&
+        l.timeCreated == listing.timeCreated) {
+        return {
+          ingredientName: l.ingredientName,
+          source: l.source,
+          timeCreated: l.timeCreated,
+          price: price
+        };
+      }
+
+      return l;
+    })});
+  }
+
   render() {
     if (this.state.redirect) {
-      return <Redirect to={this.state.redirect} />
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {token: this.state.token}
+      }} />;
     }
+
+    // TODO: paginate
+    const listings = this.state.priceListings.map(listing =>
+      <tr key={`${listing.ingredientName}:${listing.source}:${listing.timeCreated}`}>
+        <td>{listing.ingredientName}</td>
+        <td>$<input type="number" min="0" step="0.01" value={listing.price} onChange={() => this.setNewPrice(listing, listing.price)} /></td>
+        <td>{listing.source}</td>
+        <td>{listing.timeCreated}</td>
+        <td><button onClick={() => this.updateListing(listing)}>Update</button></td>
+        <td><button onClick={() => this.deleteListing(listing)}>X</button></td>
+      </tr>
+    );
+
+    return (
+      <div>
+        <table>
+          {listings}
+        </table>
+        <p>{this.state.error}</p>
+      </div>
+    );
   }
 }
-*/
 
 ReactDOM.render(App(), document.getElementById("root"));
