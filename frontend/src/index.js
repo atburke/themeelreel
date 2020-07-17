@@ -275,7 +275,7 @@ class PriceListingAdminPage extends React.Component {
     }).catch(error => {
       if (error.status === 401) {
         this.setState({redirect: '/login'});
-      } else if (error.status == 403) {
+      } else if (error.status === 403) {
         // TODO: forbidden response
       } else {
         this.setState({error: error.data.error});
@@ -301,7 +301,7 @@ class PriceListingAdminPage extends React.Component {
     }).catch(error => {
       if (error.status === 401) {
         this.setState({redirect: '/login'});
-      } else if (error.status == 403) {
+      } else if (error.status === 403) {
         // TODO: forbidden response
       } else {
         this.setState({error: error.data.error});
@@ -312,8 +312,8 @@ class PriceListingAdminPage extends React.Component {
   setNewPrice(listing, price) {
     this.setState({priceListings: this.state.priceListings.map(l => {
       if (l.ingredientName === listing.ingredientName &&
-        l.source == listing.source &&
-        l.timeCreated == listing.timeCreated) {
+        l.source === listing.source &&
+        l.timeCreated === listing.timeCreated) {
         return {
           ingredientName: l.ingredientName,
           source: l.source,
