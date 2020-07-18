@@ -309,7 +309,7 @@ class PriceListingAdminPage extends React.Component {
     });
   }
 
-  setNewPrice(listing, price) {
+  updateListingLocally(listing) {
     this.setState({priceListings: this.state.priceListings.map(l => {
       if (l.ingredientName === listing.ingredientName &&
         l.source === listing.source &&
@@ -318,7 +318,8 @@ class PriceListingAdminPage extends React.Component {
           ingredientName: l.ingredientName,
           source: l.source,
           timeCreated: l.timeCreated,
-          price: price
+          price: listing.price,
+          units: listing.units
         };
       }
 
@@ -338,7 +339,8 @@ class PriceListingAdminPage extends React.Component {
     const listings = this.state.priceListings.map(listing =>
       <tr key={`${listing.ingredientName}:${listing.source}:${listing.timeCreated}`}>
         <td>{listing.ingredientName}</td>
-        <td>$<input type="number" min="0" step="0.01" value={listing.price} onChange={() => this.setNewPrice(listing, listing.price)} /></td>
+        <td>$<input type="number" min="0" step="0.01" value={listing.price} onChange={() => this.updateListingLocally(listing)} /></td>
+        <td><input type="text" value={listing.units} onChange={() => this.updateListingLocally(listing)} /></td>
         <td>{listing.source}</td>
         <td>{listing.timeCreated}</td>
         <td><button onClick={() => this.updateListing(listing)}>Update</button></td>
