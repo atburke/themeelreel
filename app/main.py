@@ -1,6 +1,9 @@
 from flask import Flask, render_template, abort, redirect, url_for, send_file, request, g
+from secrets import token_hex
 import sqlalchemy
 import functools
+import hashlib
+
 
 app = Flask(__name__)
 
@@ -84,15 +87,16 @@ def index():
 # GET /api/login
 # Logs the user in. Expects the header "Authorization": "Basic <x>", where x is username:password base64-encoded (basic auth). If the login succeeds, return 200 with body {"token": <token>}, where token is a newly generated token. Otherwise, return 400.
 
-@app.route("/api/login/<user>")
+@app.route("/api/login")
 def login():
+    username = request.authorization.username
+    password = request.authorization.password
+    db = get_db()
     # Do I need to query 'Users' here?
-    if (user.username in USERNAMES) and (user.password in PASSWORDS):
-        # Lol this is wrong
-        return (200, token)
+    if passsword_check(db, username, password):
+        return ({'token':token_hex(32)}, 200)
     else:
-        # Lol this is also probably wrong
-        return 400
+        abort(401)
 
 
 # GET /api/createaccount
