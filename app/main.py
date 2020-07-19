@@ -9,12 +9,15 @@ app = Flask(__name__)
 
 @app.teardown_appcontext
 def close_db(error):
-    """Closes the database again at the end of the request."""
+    """
+    Closes the database again at the end of the request.
+    """
     if hasattr(g, 'connection'):
         g.connection.close()
 
 def get_db():
-    """Opens a new database connection if there is none yet for the
+    """
+    Opens a new database connection if there is none yet for the
     current application context.
     """
     if not hasattr(g, 'connection'):
@@ -92,19 +95,23 @@ def login():
     username = request.authorization.username
     password = request.authorization.password
     db = get_db()
-    # Do I need to query 'Users' here?
-    if passsword_check(db, username, password):
+    if password_check(db, username, password):
         return ({'token':token_hex(32)}, 200)
     else:
         abort(401)
-
 
 # GET /api/createaccount
 # Creates an account. Identical to /api/login except the account needs to not exist initially.
 
 @app.route("/api/createaccount")
 def createaccount():
-    return
+    username = request.authorization.username
+    password = request.authorization.password
+    db = get_db()
+    if create_user(db, username, password):
+        return ({'token':token_hex(32)}, 200)
+    else:
+        abort(409)
 
 # GET /api/adminpricelistings
 
