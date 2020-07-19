@@ -1,0 +1,9 @@
+DELETE FROM User;
+DELETE FROM Tokens;
+DELETE FROM Meal_Plan;
+DELETE FROM Created_By;
+DELETE FROM Recipe;
+DELETE FROM Consists_Of;
+DELETE FROM Ingredient;
+DELETE FROM Requires;
+DELETE FROM Ingredient_Price_Listing;
