@@ -4,6 +4,8 @@ import sqlalchemy
 import functools
 import hashlib
 
+from database.sql import *
+
 
 app = Flask(__name__)
 
@@ -21,7 +23,7 @@ def get_db():
     current application context.
     """
     if not hasattr(g, 'connection'):
-        g.engine = sqlalchemy.create_engine('sqlite:///census.sqlite')
+        g.engine = sqlalchemy.create_engine(app.config["DB_URL"])
         g.connection = g.engine.connect()
     return g.connection
 
@@ -96,7 +98,9 @@ def login():
     password = request.authorization.password
     db = get_db()
     if password_check(db, username, password):
-        return ({'token':token_hex(32)}, 200)
+        token = token_hex(32)
+        add_token_for_user(db, username, token)
+        return ({'token': token}, 200)
     else:
         abort(401)
 
@@ -109,7 +113,9 @@ def createaccount():
     password = request.authorization.password
     db = get_db()
     if create_user(db, username, password):
-        return ({'token':token_hex(32)}, 200)
+        token = token_hex(32)
+        add_token_for_user(db, username, token)
+        return ({'token':token}, 200)
     else:
         abort(409)
 
@@ -121,13 +127,13 @@ def admin_list():
 
 # POST /api/adminpricelistings/update
 
-@app.route("/api/adminpricelistings/update", method='POST')
+@app.route("/api/adminpricelistings/update", methods=['POST'])
 def update_price():
     return
 
 # POST /api/adminpricelistings/delete
 
-@app.route("/api/adminpricelistings/delete", method='POST')
+@app.route("/api/adminpricelistings/delete", methods=['POST'])
 def delete_price():
     return
 
