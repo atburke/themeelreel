@@ -186,7 +186,24 @@ def test_fetch_needed_price_listing(client, db):
 
 
 def test_fetch_needed_price_listing_none_empty(client, db):
-    raise NotImplementedError
+    create_recipe(
+        db,
+        "carrots & onions",
+        "snack",
+        [
+            {"name": "carrots", "amount": 3, "units": "lb"},
+            {"name": "onions", "amount": 27, "units": "g"},
+        ],
+    )
+
+    create_price_listing(db, "carrots", "Aldi", 2.27, "kg")
+    create_price_listing(db, "carrots", "Walmart", 1.11, "lb")
+    create_price_listing(db, "onions", "Meijer", 3.43, "oz")
+    create_user(db, "name", "pw")
+    token = login(client, "name", "pw")
+    r = client.get("/api/pricelistings", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
+    assert r.get_json() == {"result": "onions"}
 
 
 ALL_ITEMS = ["cookies", "grapes", "lb", "tbsp", "g", "kg", "cookie dough"]
@@ -202,9 +219,49 @@ ALL_ITEMS = ["cookies", "grapes", "lb", "tbsp", "g", "kg", "cookie dough"]
         ("  lb  ", ["lb"]),
     ],
 )
-def test_search_ingredients(client, kw, matches):
-    raise NotImplementedError
+def test_search_ingredients(client, db, kw, matches):
+    create_recipe(
+        db,
+        "kitchen sink",
+        "breakfast",
+        [{"name": item, "amount": 1, "units": "count"} for item in ALL_ITEMS],
+    )
+    create_user(db, "u", "p")
+    token = login(client, "u", "p")
+    r = client.get(
+        "/api/search/ingredient",
+        query_string={"kw": kw},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200
+    returned_items = r.get_json()["results"]
+    assert sorted(returned_items) == sorted(matches)
 
 
-def test_search_units():
-    raise NotImplementedError
+@pytest.mark.parametrize(
+    "kw,matches",
+    [
+        ("cookie", ["cookies", "cookie dough"]),
+        ("g", ["grapes", "g", "kg", "cookie dough"]),
+        ("xyz", []),
+        ("lb", ["lb"]),
+        ("  lb  ", ["lb"]),
+    ],
+)
+def test_search_units(client, db, kw, matches):
+    create_recipe(
+        db,
+        "kitchen sink",
+        "breakfast",
+        [{"name": item, "amount": 1, "units": item} for item in ALL_ITEMS],
+    )
+    create_user(db, "u", "p")
+    token = login(client, "u", "p")
+    r = client.get(
+        "/api/search/unit",
+        query_string={"kw": kw},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200
+    returned_items = r.get_json()["results"]
+    assert sorted(returned_items) == sorted(matches)

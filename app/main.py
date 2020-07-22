@@ -184,14 +184,16 @@ def access_list():
 # GET /api/search/ingredient?kw=<keyword>
 
 
-@app.route("/api/search/ingredient?kw=<keyword>")
+@app.route("/api/search/ingredient")
 def search_ingr():
+    kw = request.args.get("kw")
     return ({}, 404)
 
 
 # GET /api/search/unit?kw=<keyword>
 
 
-@app.route("/api/search/unit?kw=<keyword>")
+@app.route("/api/search/unit")
 def search_unit():
+    kw = request.args.get("kw")
     return ({}, 404)
