@@ -22,11 +22,10 @@ function App() {
             <CreateAccountPage />
           </Route>
           <Route path="/">
-          // temporary until we implement main page
-            <Redirect to="/login" />
+            <PlanMealPage />
           </Route>
           <Route path="/listings">
-            <Redirect to="/login" />
+            <PriceListingPage />
           </Route>
           <Route path="/adminlistings">
             <PriceListingAdminPage />
@@ -35,6 +34,25 @@ function App() {
       </div>
     </Router>
   );
+}
+
+class AppHeader extends React.Component {
+  render() {
+    return (
+      <nav>
+        <ul>
+          <li><Link to={{
+            pathname: '/',
+            state: {token: this.props.token}
+          }}>Meal Planner</Link></li>
+          <li><Link to={{
+            pathname: '/listings',
+            state: {token: this.props.token}
+          }}>Price Listings</Link></li>
+        </ul>
+      </nav>
+    )
+  }
 }
 
 class LoginPage extends React.Component {
@@ -194,28 +212,260 @@ class CreateAccountPage extends React.Component {
   }
 }
 
-/*
 class PlanMealPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      token: ''
+    };
+  }
   render() {
     if (this.state.redirect) {
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {token: this.state.token}
-      }} />
+      }} />;
     }
+
+    return (
+      <div>
+        <AppHeader token={this.state.token} />
+        <p>NOTHING TO SEE HERE</p>
+      </div>
+    );
   }
 }
-*/
 
-/*
 class PriceListingPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ingredientSuggestions: [],
+      unitSuggestions: [],
+      token: '',
+      ingredientSearchTerm: '',
+      unitSearchTerm: '',
+      newIngredientName: '',
+      newIngredientSource: '',
+      newIngredientPrice: 0,
+      newIngredientUnits: ''
+    };
+    this.searchIngredient = this.searchIngredient.bind(this);
+    this.searchUnit = this.searchUnit.bind(this);
+    this.fetchNeededPriceListing = this.fetchNeededPriceListing.bind(this);
+    this.setPrice = this.setPrice.bind(this);
+    this.selectUnits = this.selectUnits.bind(this);
+    this.selectIngredient = this.selectIngredient.bind(this);
+    this.selectSource = this.selectSource.bind(this);
+    this.addPriceListing = this.addPriceListing.bind(this);
+  }
+
+  searchIngredient(e) {
+    let searchTerm = e.target.value;
+    this.setState({ingredientSearchTerm: searchTerm});
+    if (!searchTerm) {
+      this.setState({ingredientSuggestions: []});
+      return;
+    }
+
+    axios({
+      method: 'get',
+      url: '/api/search/ingredient',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      params: {
+        kw: searchTerm
+      }
+    }).then(response => {
+      this.setState({ingredientSuggestions: response.data.results});
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  searchUnit(e) {
+    let searchTerm = e.target.value;
+    this.setState({unitSearchTerm: searchTerm});
+    if (!searchTerm) {
+      this.setState({unitSuggestions: []});
+      return;
+    }
+
+    axios({
+      method: 'get',
+      url: '/api/search/unit',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      params: {
+        kw: searchTerm
+      }
+    }).then(response => {
+      this.setState({unitSuggestions: response.data.results});
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  fetchNeededPriceListing() {
+    axios({
+      method: 'get',
+      url: '/api/pricelistings',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      this.setState({
+        newIngredientName: response.data.ingredientName,
+        ingredientSuggestions: []
+      });
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
+  selectIngredient(ingredientName) {
+    this.setState({newIngredientName: ingredientName, ingredientSuggestions: []});
+  }
+
+  selectUnits(units) {
+    this.setState({newIngredientUnits: units, unitSuggestions: []});
+  }
+
+  selectSource(e) {
+    this.setState({newIngredientSource: e.target.value});
+  }
+
+  setPrice(e) {
+    this.setState({newIngredientPrice: e.target.value});
+  }
+
+  addPriceListing(e) {
+    if (e) {
+      e.preventDefault();
+    }
+
+    let newListing = {
+      ingredientName: this.state.newIngredientName,
+      price: this.state.newIngredientPrice,
+      source: this.state.newIngredientSource,
+      units: this.state.newIngredientUnits
+    };
+
+    ['ingredientName', 'source', 'units'].forEach(field => {
+      if (!newListing[field]) {
+        this.setState({error: `Missing field: ${field}`});
+        return;
+      }
+    });
+
+    if (newListing.price < 0) {
+      this.setState({error: 'Price cannot be negative'});
+      return;
+    }
+
+    axios({
+      method: 'post',
+      url: '/api/pricelistings',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      data: newListing
+    }).then(response => {
+      this.setState({
+        error: '',
+        message: `Price for ${newListing.ingredientName} successfully added!`
+      });
+    }).catch(error => {
+      if (error.status === 401) {
+        this.setState({redirect: '/login'});
+      } else {
+        this.setState({error: error.data.error});
+      }
+    });
+  }
+
   render() {
     if (this.state.redirect) {
-      return <Redirect to={this.state.redirect} />
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {token: this.state.token}
+      }} />;
     }
+
+    let ingredientOptions;
+    if (this.state.ingredientOptions) {
+      ingredientOptions = (
+        <ul>
+          {this.ingredientSuggestions.map(name => (
+            <li><button onClick={() => this.selectIngredient(name)}>{name}</button></li>
+          ))}
+        </ul>
+      );
+    } else {
+      this.ingredientOptions = <div></div>;
+    }
+
+    let unitOptions;
+    if (this.state.unitOptions) {
+      unitOptions = (
+        <ul>
+        {this.unitSuggestions.map(unit => (
+          <li><button onClick={() => this.selectUnits(unit)}>{unit}</button></li>
+        ))}
+        </ul>
+      );
+    } else {
+      unitOptions = <div></div>;
+    }
+
+    let form;
+    if (this.state.newIngredientName) {
+      form = (
+          <div>
+          <form onSubmit={this.addPriceListing}>
+            <p>{this.state.newIngredientName}</p>
+            <input type="text" value={this.state.newIngredientSource} onChange={this.selectSource} />
+            <input type="number" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
+            <p>{this.state.newIngredientUnits}</p>
+            <input type="submit" value="Submit" />
+          </form>
+        </div>
+      );
+    } else {
+      form = <div></div>;
+    }
+
+    return (
+      <div>
+      <AppHeader token={this.state.token} />
+        <label htmlFor="searchIngredient">Search for an ingredient to add a price listing for:</label>
+        <input id="searchIngredient" value={this.ingredientSearchTerm} onChange={this.searchIngredient}/>
+        {ingredientOptions}
+        <button onClick={this.fetchNeededPriceListing}>Choose for me</button>
+        <label htmlFor="searchUnit">Select Units</label>
+        <input id="searchUnit" value={this.unitSearchTerm} onChange={this.searchUnit} />
+        {unitOptions}
+        <hr />
+        {form}
+        {this.state.error}
+      </div>
+    );
   }
 }
-*/
 
 class PriceListingAdminPage extends React.Component {
   constructor(props) {
@@ -350,6 +600,7 @@ class PriceListingAdminPage extends React.Component {
 
     return (
       <div>
+      <AppHeader token={this.state.token} />
         <table>
           {listings}
         </table>
