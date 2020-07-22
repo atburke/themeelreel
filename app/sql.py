@@ -28,24 +28,24 @@ def clear_tables(connection):
 
 
 def check_token(connection, token):
-    statement = text("SELECT username, timestamp FROM Tokens WHERE token=:token")
+    statement = text("SELECT username, TimeCreated FROM Token WHERE token=:token")
     result = connection.execute(statement, {"token": token}).fetchall()
     if not result:
         return None
     username, timestamp = result[0]
     if time.time() - timestamp >= 3600:
         return None
-    update = text("UPDATE Tokens SET timestamp=:now WHERE username=:username")
+    update = text("UPDATE Token SET TimeCreated=:now WHERE username=:username")
     connection.execute(update, {"now": int(time.time()), "username": username})
     return username
 
 
 def is_admin(connection, username):
-    statement = text("SELECT Admin FROM User WHERE Username=:username")
+    statement = text("SELECT Is_Admin FROM User WHERE Username=:username")
     result = connection.execute(statement, {"username": username}).fetchall()
     if not result:
         return False
-    return result[0]
+    return result[0].Is_Admin
 
 
 def password_check(connection, username, password):
@@ -86,3 +86,53 @@ def create_user(connection, username, password):
         insert, {"username": username, "password_hash": pwh, "salt": salt}
     )
     return True
+
+
+def fetch_all_price_listings(db):
+    statement = text(
+        "SELECT * FROM Ingredient_Price_Listing ORDER BY Ingredient_Name, Ingredient_Source, Ingredient_Units, Ingredient_Price, Time_Added"
+    )
+    return [
+        {
+            "ingredientName": r.Ingredient_Name,
+            "source": r.Ingredient_Source,
+            "timeCreated": r.Time_Added,
+            "units": r.Ingredient_Units,
+            "price": r.Ingredient_Price,
+        }
+        for r in db.execute(statement)
+    ]
+
+
+def update_price_listing(db, name, source, time_created, price=None, units=None):
+    if price is None and units is None:
+        return
+
+    updates = []
+    if price is not None:
+        updates.append("Ingredient_Price = :price")
+    if units is not None:
+        updates.append("Ingredient_Units = :units")
+
+    statement = text(
+        f"UPDATE Ingredient_Price_Listing SET {', '.join(updates)} WHERE Time_Added = :time_created AND Ingredient_Source = :source AND Ingredient_Name = :name"
+    )
+    db.execute(
+        statement,
+        {
+            "price": price,
+            "units": units,
+            "time_created": time_created,
+            "source": source,
+            "name": name,
+        },
+    )
+
+
+def delete_price_listing(db, name, source, time_created):
+    statement = text(
+        "DELETE FROM Ingredient_Price_Listing WHERE Time_Added = :time_created AND Ingredient_Source = :source AND Ingredient_Name = :name"
+    )
+    db.execute(
+        statement, {"name": name, "source": source, "time_created": time_created}
+    )

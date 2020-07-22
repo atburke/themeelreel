@@ -45,7 +45,7 @@ def test_update_price_listing(client, db):
     r = client.post(
         "/api/adminpricelistings/update",
         headers={"Authorization": f"Bearer {token}"},
-        data={
+        json={
             "ingredientName": "carrot",
             "source": "Walmart",
             "timeCreated": ts.timestamp(),
@@ -56,7 +56,7 @@ def test_update_price_listing(client, db):
     assert r.status_code == 200
 
     statement = text(
-        "SELECT * FROM Ingredient_Price_Listing WHERE IngredientName = 'carrot' AND IngredientSource = 'Walmart' AND Time_Added = :now"
+        "SELECT * FROM Ingredient_Price_Listing WHERE Ingredient_Name = 'carrot' AND Ingredient_Source = 'Walmart' AND Time_Added = :now"
     )
     result = db.execute(statement, {"now": ts}).fetchall()
     assert result != []
@@ -72,7 +72,7 @@ def test_update_price_listing_not_admin(client, db):
     r = client.post(
         "/api/adminpricelistings/update",
         headers={"Authorization": f"Bearer {token}"},
-        data={
+        json={
             "ingredientName": "carrot",
             "source": "Walmart",
             "timeCreated": ts.timestamp(),
@@ -90,7 +90,7 @@ def test_delete_price_listing(client, db):
     r = client.post(
         "/api/adminpricelistings/delete",
         headers={"Authorization": f"Bearer {token}"},
-        data={
+        json={
             "ingredientName": "carrot",
             "source": "Walmart",
             "timeCreated": ts.timestamp(),
@@ -99,7 +99,7 @@ def test_delete_price_listing(client, db):
     assert r.status_code == 200
 
     statement = text(
-        "SELECT * FROM Ingredient_Price_Listing WHERE IngredientName = 'carrot' AND IngredientSource = 'Walmart' AND Time_Added = :now"
+        "SELECT * FROM Ingredient_Price_Listing WHERE Ingredient_Name = 'carrot' AND Ingredient_Source = 'Walmart' AND Time_Added = :now"
     )
     result = db.execute(statement, {"now": ts}).fetchall()
     assert result == []
@@ -112,7 +112,7 @@ def test_delete_price_listing_not_admin(client, db):
     r = client.post(
         "/api/adminpricelistings/delete",
         headers={"Authorization": f"Bearer {token}"},
-        data={
+        json={
             "ingredientName": "carrot",
             "source": "Walmart",
             "timeCreated": ts.timestamp(),
@@ -128,7 +128,7 @@ def test_post_price_listing(client, db):
     r = client.post(
         "/api/pricelistings",
         headers={"Authorization": f"Bearer {token}"},
-        data={
+        json={
             "ingredientName": "red onion",
             "source": "Kroger",
             "price": 99.01,
@@ -161,7 +161,7 @@ def test_post_price_listing_missing_field(client, db, missing):
     create_user(db, "me", "pw")
     token = login(client, "me", "pw")
     r = client.post(
-        "/api/pricelistings", headers={"Authorization": f"Bearer {token}"}, data=data
+        "/api/pricelistings", headers={"Authorization": f"Bearer {token}"}, json=data
     )
     assert r.status_code == 400
 

@@ -13,6 +13,7 @@ import sqlalchemy
 import functools
 import hashlib
 import os
+import datetime
 
 from sql import *
 
@@ -152,24 +153,46 @@ def createaccount():
 
 
 @app.route("/api/adminpricelistings")
+@admin_only
 def admin_list():
-    return ({}, 404)
+    db = get_db()
+    return ({"results": fetch_all_price_listings(db)}, 200)
 
 
 # POST /api/adminpricelistings/update
 
 
 @app.route("/api/adminpricelistings/update", methods=["POST"])
+@admin_only
 def update_price():
-    return ({}, 404)
+    db = get_db()
+    data = request.get_json()
+    update_price_listing(
+        db,
+        data["ingredientName"],
+        data["source"],
+        datetime.datetime.fromtimestamp(data["timeCreated"]),
+        data.get("price"),
+        data.get("units"),
+    )
+    return ({}, 200)
 
 
 # POST /api/adminpricelistings/delete
 
 
 @app.route("/api/adminpricelistings/delete", methods=["POST"])
+@admin_only
 def delete_price():
-    return ({}, 404)
+    db = get_db()
+    data = request.get_json()
+    delete_price_listing(
+        db,
+        data["ingredientName"],
+        data["source"],
+        datetime.datetime.fromtimestamp(data["timeCreated"]),
+    )
+    return ({}, 200)
 
 
 # POST /api/pricelistings
