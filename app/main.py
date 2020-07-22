@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, redirect, url_for, send_file, request, g
+from flask import Flask, render_template, abort, redirect, url_for, send_file, request, jsonify, make_response, g
 from secrets import token_hex
 import sqlalchemy
 import functools
@@ -100,7 +100,7 @@ def login():
     if password_check(db, username, password):
         token = token_hex(32)
         add_token_for_user(db, username, token)
-        return ({'token': token}, 200)
+        return (jsonify({'token': token}), 200)
     else:
         abort(401)
 
@@ -115,7 +115,7 @@ def createaccount():
     if create_user(db, username, password):
         token = token_hex(32)
         add_token_for_user(db, username, token)
-        return ({'token':token}, 200)
+        return (jsonify({'token':token}), 200)
     else:
         abort(409)
 

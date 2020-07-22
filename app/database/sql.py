@@ -64,19 +64,26 @@ def add_token_for_user(connection, username, token):
         "now": int(time.time())
     })
 
-def create_user(connection, username, password):
+def create_user(connection, username, password, admin=False):
     '''
     Creates a new user with username and password.
     Returns true if creation was successful and false otherwise.
     '''
     # Check if username exists already
-    fetch_pws = text("SELECT Username FROM Users WHERE Username=:username")
+    fetch_pws = text("SELECT Username FROM User WHERE Username=:username")
     result = connection.execute(fetch_pws, {'username':username})
-    if result:
-        return False
+    if not result:
+        abort(401)
     # Create user
     salt = uuid4().hex  # Generate salt from UUID
-    pwh = hashlib.sha256(password+salt).hexdigest()
-    insert = text("INSERT INTO Users VALUES (:username, :password_hash, FALSE)")
-    connection.execute(insert, {'username':username, 'password_hash':pwh})
+    pwh = hashlib.sha256()
+    pwh.update(f"{password}{salt}".encode())
+    insert = text("INSERT INTO User VALUES (:username, :password_hash, :salt, :is_admin)")
+    connection.execute(insert, {
+        'username':username,
+        'password_hash':pwh.hexdigest(),
+        'salt':salt,
+        'is_admin':admin,
+
+    })
     return True
