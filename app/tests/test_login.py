@@ -1,5 +1,6 @@
 from conftest import *
 from util import hash_password
+from sqlalchemy.sql import text
 
 def test_login(client, db):
     create_user(db, "me123", "mypassword")

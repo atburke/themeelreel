@@ -3,11 +3,13 @@ from secrets import token_hex
 import sqlalchemy
 import functools
 import hashlib
+import os
 
 from sql import *
 
 
 app = Flask(__name__)
+app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL")
 
 @app.teardown_appcontext
 def close_db(error):
@@ -23,7 +25,7 @@ def get_db():
     current application context.
     """
     if not hasattr(g, 'connection'):
-        g.engine = sqlalchemy.create_engine(app.config["DB_URL"])
+        g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
         g.connection = g.engine.connect()
     return g.connection
 
@@ -130,35 +132,35 @@ def createaccount():
 
 @app.route("/api/adminpricelistings")
 def admin_list():
-    return
+    return ({}, 404)
 
 # POST /api/adminpricelistings/update
 
 @app.route("/api/adminpricelistings/update", methods=['POST'])
 def update_price():
-    return
+    return ({}, 404)
 
 # POST /api/adminpricelistings/delete
 
 @app.route("/api/adminpricelistings/delete", methods=['POST'])
 def delete_price():
-    return
+    return ({}, 404)
 
 # POST /api/pricelistings
 # GET /api/pricelistings
 
 @app.route("/api/pricelistings", methods=['GET', 'POST'])
 def access_list():
-    return
+    return ({}, 404)
 
 # GET /api/search/ingredient?kw=<keyword>
 
 @app.route("/api/search/ingredient?kw=<keyword>")
 def search_ingr():
-    return
+    return ({}, 404)
 
 # GET /api/search/unit?kw=<keyword>
 
 @app.route("/api/search/unit?kw=<keyword>")
 def search_unit():
-    return
+    return ({}, 404)

@@ -72,7 +72,6 @@ CREATE TABLE Ingredient_Price_Listing (
 	Ingredient_Source VARCHAR(50) NOT NULL,
 	Ingredient_Name VARCHAR(50) NOT NULL,
 	Ingredient_Units VARCHAR(50),
-	Ingredient_Amount REAL,
 	Ingredient_Price REAL,
 	PRIMARY KEY (Time_Added, Ingredient_Source, Ingredient_Name),
 	FOREIGN KEY (Ingredient_Name) REFERENCES Ingredient ON DELETE CASCADE

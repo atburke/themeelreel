@@ -27,8 +27,7 @@ Creates an account. Identical to /api/login except the account needs to not exis
 
 Gets price listings for admins. Admin-only route. Response should be:
 
-{
-  [
+{ results: [
     {
       ingredientName: "foo",
       source: "Walmart",
@@ -39,6 +38,8 @@ Gets price listings for admins. Admin-only route. Response should be:
     ...
   ]
 }
+
+Order by ingredient name, source, units, price (all asc)
 
 
 ### POST /api/adminpricelistings/update
@@ -82,16 +83,18 @@ Creates a new price listing. Data should be:
 Fetches an ingredient that doesn't have any price listings yet. If there are none,
 fetch the ingredient with the fewest listings.
 
+{result: "milk"}
+
 
 ### GET /api/search/ingredient?kw=<keyword>
 
 Searches for ingredients that match a specified keyword. Response should be:
 
-["milk", ...]
+{results: ["milk", ...]}
 
 
 ### GET /api/search/unit?kw=<keyword>
 
 Searches for units that match a specified keyword. Response should be:
 
-["tbsp", ...]
+{results: ["tbsp", ...]}
