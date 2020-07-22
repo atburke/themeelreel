@@ -1,4 +1,13 @@
-from flask import Flask, render_template, abort, redirect, url_for, send_file, request, g
+from flask import (
+    Flask,
+    render_template,
+    abort,
+    redirect,
+    url_for,
+    send_file,
+    request,
+    g,
+)
 from secrets import token_hex
 import sqlalchemy
 import functools
@@ -11,20 +20,22 @@ from sql import *
 app = Flask(__name__)
 app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL")
 
+
 @app.teardown_appcontext
 def close_db(error):
     """
     Closes the database again at the end of the request.
     """
-    if hasattr(g, 'connection'):
+    if hasattr(g, "connection"):
         g.connection.close()
+
 
 def get_db():
     """
     Opens a new database connection if there is none yet for the
     current application context.
     """
-    if not hasattr(g, 'connection'):
+    if not hasattr(g, "connection"):
         g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
         g.connection = g.engine.connect()
     return g.connection
@@ -33,7 +44,7 @@ def get_db():
 def requires_token(f):
     @functools.wraps(f)
     def wrapper():
-        token = request.headers['Authorization'].split(' ')[1]
+        token = request.headers["Authorization"].split(" ")[1]
         if not token:
             abort(401)
         db = get_db()
@@ -42,7 +53,9 @@ def requires_token(f):
         if not user:
             abort(401)
         return f()
+
     return wrapper
+
 
 def admin_only(f):
     @functools.wraps(f)
@@ -54,23 +67,24 @@ def admin_only(f):
             return f()
         else:
             abort(403)
+
     return wrapper
 
 
 # I would 100% appreciate a better solution for this
-served_files = frozenset((
-    "asset-manifest.json",
-    "index.html",
-    "favicon.ico",
-    "manifest.json",
-    "robots.txt",
-    "service-worker.js",
-))
+served_files = frozenset(
+    (
+        "asset-manifest.json",
+        "index.html",
+        "favicon.ico",
+        "manifest.json",
+        "robots.txt",
+        "service-worker.js",
+    )
+)
 
-served_binary_files = frozenset((
-    "logo192.png",
-    "logo512.png",
-))
+served_binary_files = frozenset(("logo192.png", "logo512.png",))
+
 
 @app.route("/<file>")
 def serve_root_file(file):
@@ -82,9 +96,11 @@ def serve_root_file(file):
 
     abort(404)
 
+
 @app.errorhandler(404)
 def not_found(e):
     return redirect(url_for("index"))
+
 
 @app.route("/")
 def index():
@@ -94,6 +110,7 @@ def index():
 # GET /api/login
 # Logs the user in. Expects the header "Authorization": "Basic <x>", where x is username:password base64-encoded (basic auth). If the login succeeds, return 200 with body {"token": <token>}, where token is a newly generated token. Otherwise, return 400.
 
+
 @app.route("/api/login")
 def login():
     username = request.authorization.username
@@ -102,12 +119,14 @@ def login():
     if password_check(db, username, password):
         token = token_hex(32)
         add_token_for_user(db, username, token)
-        return ({'token': token}, 200)
+        return ({"token": token}, 200)
     else:
         abort(401)
 
+
 # GET /api/createaccount
 # Creates an account. Identical to /api/login except the account needs to not exist initially.
+
 
 @app.route("/api/createaccount")
 def createaccount():
@@ -115,51 +134,63 @@ def createaccount():
     password = request.authorization.password
 
     if not username:
-        return ({'error': 'No username given'}, 400)
+        return ({"error": "No username given"}, 400)
 
     if not password:
-        return ({'error': 'No password given'}, 400)
+        return ({"error": "No password given"}, 400)
 
     db = get_db()
     if not create_user(db, username, password):
-        return ({'error': 'User already exists'}, 409)
+        return ({"error": "User already exists"}, 409)
 
     token = token_hex(32)
     add_token_for_user(db, username, token)
-    return ({'token':token}, 200)
+    return ({"token": token}, 200)
+
 
 # GET /api/adminpricelistings
+
 
 @app.route("/api/adminpricelistings")
 def admin_list():
     return ({}, 404)
 
+
 # POST /api/adminpricelistings/update
 
-@app.route("/api/adminpricelistings/update", methods=['POST'])
+
+@app.route("/api/adminpricelistings/update", methods=["POST"])
 def update_price():
     return ({}, 404)
 
+
 # POST /api/adminpricelistings/delete
 
-@app.route("/api/adminpricelistings/delete", methods=['POST'])
+
+@app.route("/api/adminpricelistings/delete", methods=["POST"])
 def delete_price():
     return ({}, 404)
+
 
 # POST /api/pricelistings
 # GET /api/pricelistings
 
-@app.route("/api/pricelistings", methods=['GET', 'POST'])
+
+@app.route("/api/pricelistings", methods=["GET", "POST"])
 def access_list():
     return ({}, 404)
 
+
 # GET /api/search/ingredient?kw=<keyword>
+
 
 @app.route("/api/search/ingredient?kw=<keyword>")
 def search_ingr():
     return ({}, 404)
 
+
 # GET /api/search/unit?kw=<keyword>
+
 
 @app.route("/api/search/unit?kw=<keyword>")
 def search_unit():
