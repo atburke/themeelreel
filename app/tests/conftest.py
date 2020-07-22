@@ -16,20 +16,20 @@ import base64
 import hashlib
 from secrets import token_hex
 
-import database.sql as sql
+import sql
 from main import *
+from util import *
 
 TEST_DATABASE = "sqlite:///test.sqlite"
 
 
 def create_user(db, user, pw, admin=False):
     salt = "saltyboi"
-    hasher = hashlib.sha256()
-    hasher.update(f"{pw}{salt}".encode())
+    pw_hash = hash_password(pw, salt)
     statement = text("INSERT INTO User VALUES (:user, :pw_hash, :salt, :admin)")
     db.execute(statement, {
         "user": user,
-        "pw_hash": hasher.hexdigest(),
+        "pw_hash": pw_hash,
         "salt": salt,
         "admin": admin
     })

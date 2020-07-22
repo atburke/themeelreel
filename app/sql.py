@@ -6,14 +6,16 @@ import hashlib
 from pathlib import Path
 import time
 
+from util import hash_password
+
 def create_tables(connection):
-    sql_dir = Path(__file__).parent.joinpath("sql")
+    sql_dir = Path(__file__).parent.joinpath("database")
     with open(sql_dir.joinpath("schema.sql")) as f:
         for statement in f.read().split(";"):
             connection.execute(text(statement))
 
 def clear_tables(connection):
-    sql_dir = Path(__file__).parent.joinpath("sql")
+    sql_dir = Path(__file__).parent.joinpath("database")
     with open(sql_dir.joinpath("clear_tables.sql")) as f:
         for statement in f.read().split(";"):
             try:
@@ -47,11 +49,7 @@ def password_check(connection, username, password):
     if not result:
         return False
     pwh, salt = result[0]
-    print(pwh, salt)
-    sha = hashlib.sha256()
-    sha.update(f"{password}{salt}".encode())
-    digest = sha.hexdigest()
-    print(digest)
+    digest = hash_password(password, salt)
     return digest == pwh
 
 def add_token_for_user(connection, username, token):
@@ -70,13 +68,14 @@ def create_user(connection, username, password):
     Returns true if creation was successful and false otherwise.
     '''
     # Check if username exists already
-    fetch_pws = text("SELECT Username FROM Users WHERE Username=:username")
-    result = connection.execute(fetch_pws, {'username':username})
+    fetch_pws = text("SELECT Username FROM User WHERE Username=:username")
+    result = connection.execute(fetch_pws, {'username':username}).fetchall()
     if result:
         return False
+
     # Create user
     salt = uuid4().hex  # Generate salt from UUID
-    pwh = hashlib.sha256(password+salt).hexdigest()
-    insert = text("INSERT INTO Users VALUES (:username, :password_hash, FALSE)")
-    connection.execute(insert, {'username':username, 'password_hash':pwh})
+    pwh = hash_password(password, salt)
+    insert = text("INSERT INTO User VALUES (:username, :password_hash, :salt, FALSE)")
+    connection.execute(insert, {'username':username, 'password_hash':pwh, 'salt': salt})
     return True

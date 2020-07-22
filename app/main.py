@@ -4,7 +4,7 @@ import sqlalchemy
 import functools
 import hashlib
 
-from database.sql import *
+from sql import *
 
 
 app = Flask(__name__)
@@ -111,13 +111,20 @@ def login():
 def createaccount():
     username = request.authorization.username
     password = request.authorization.password
+
+    if not username:
+        return ({'error': 'No username given'}, 400)
+
+    if not password:
+        return ({'error': 'No password given'}, 400)
+
     db = get_db()
-    if create_user(db, username, password):
-        token = token_hex(32)
-        add_token_for_user(db, username, token)
-        return ({'token':token}, 200)
-    else:
-        abort(409)
+    if not create_user(db, username, password):
+        return ({'error': 'User already exists'}, 409)
+
+    token = token_hex(32)
+    add_token_for_user(db, username, token)
+    return ({'token':token}, 200)
 
 # GET /api/adminpricelistings
 
