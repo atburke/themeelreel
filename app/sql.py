@@ -136,3 +136,25 @@ def delete_price_listing(db, name, source, time_created):
     db.execute(
         statement, {"name": name, "source": source, "time_created": time_created}
     )
+
+
+def search_ingredient(db, kw):
+    statement = text(
+        "SELECT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw"
+    )
+    result = db.execute(
+        statement, {"kw": f"%{kw}%"}
+    )
+    # return [{'ingredientName':r.Ingredient_Name} for r in result]
+    return [r.Ingredient_Name for r in result]
+
+
+def search_unit(db, kw):
+    statement = text(
+        "SELECT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw"
+    )
+    result = db.execute(
+        statement, {"kw": f"%{kw}%"}
+    )
+    # return [{'units':r.Recipe_Units} for r in result]
+    return [r.Recipe_Units for r in result]

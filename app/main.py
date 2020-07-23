@@ -125,7 +125,7 @@ def login():
         add_token_for_user(db, username, token)
         return (jsonify({'token': token}), 200)
     else:
-        abort(401)
+        return (jsonify({"error": "Incorrect username and password combination"}), 401)
 
 
 # GET /api/createaccount
@@ -138,28 +138,18 @@ def createaccount():
     password = request.authorization.password
 
     if not username:
-        return ({"error": "No username given"}, 400)
+        return (jsonify({"error": "No username given"}), 400)
 
     if not password:
-        return ({"error": "No password given"}, 400)
+        return (jsonify({"error": "No password given"}), 400)
 
     db = get_db()
-# <<<<<<< HEAD
-#     if create_user(db, username, password):
-#         token = token_hex(32)
-#         add_token_for_user(db, username, token)
-#         return (jsonify({'token':token}), 200)
-#     else:
-#         abort(409)
-# =======
     if not create_user(db, username, password):
         return (jsonify({"error": "User already exists"}), 409)
 
     token = token_hex(32)
     add_token_for_user(db, username, token)
     return (jsonify({"token": token}), 200)
-
-# >>>>>>> c4e860d11e04a84de44f16b3dd1b87f31a7db2bb
 
 # GET /api/adminpricelistings
 
@@ -168,7 +158,7 @@ def createaccount():
 @admin_only
 def admin_list():
     db = get_db()
-    return ({"results": fetch_all_price_listings(db)}, 200)
+    return (jsonify({"results": fetch_all_price_listings(db)}), 200)
 
 
 # POST /api/adminpricelistings/update
@@ -187,7 +177,7 @@ def update_price():
         data.get("price"),
         data.get("units"),
     )
-    return ({}, 200)
+    return (jsonify({}), 200)
 
 
 # POST /api/adminpricelistings/delete
@@ -204,31 +194,60 @@ def delete_price():
         data["source"],
         datetime.datetime.fromtimestamp(data["timeCreated"]),
     )
-    return ({}, 200)
+    return (jsonify({}), 200)
 
 
 # POST /api/pricelistings
 # GET /api/pricelistings
+'''
+Creates a new price listing. Data should be:
 
-
+{
+  ingredientName: "foo",
+  source: "Walmart",
+  price: 2.54,
+  units: "lb"
+}
+'''
 @app.route("/api/pricelistings", methods=["GET", "POST"])
 def access_list():
-    return ({}, 404)
+    db = get_db()
+    if request.method == 'GET':
+        # add ingredient
+        return (jsonify({
+                'ingredientName': igrtnme,
+                  'source': srce,
+                  'price': prce,
+                  'units': unts
+            }), 404)
+    elif request.method == 'POST':
+        # TODO: add boi
+        data = request.get_json()
+        update_price_listing(
+            db,
+            data["ingredientName"],
+            data["source"],
+            datetime.datetime.fromtimestamp(data["timeCreated"]),
+            data.get("price"),
+            data.get("units"),
+        )
+        return (jsonify({'results': 'Item added.'}), 200)
+        # retrieve ingredient
 
 
 # GET /api/search/ingredient?kw=<keyword>
 
-
 @app.route("/api/search/ingredient")
 def search_ingr():
+    db = get_db()
     kw = request.args.get("kw")
-    return ({}, 404)
+    return (jsonify({'results':search_ingredient(db, kw)}), 200)
 
 
 # GET /api/search/unit?kw=<keyword>
 
-
 @app.route("/api/search/unit")
 def search_unit():
+    db = get_db()
     kw = request.args.get("kw")
-    return ({}, 404)
+    return (jsonify({'results':search_ingredient(db, kw)}), 200)
