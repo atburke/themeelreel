@@ -104,6 +104,54 @@ def fetch_all_price_listings(db):
     ]
 
 
+def fetch_missing_price_listings(db):
+    statement = text(
+        """
+        SELECT A.Ingredient_Name
+        FROM Ingredient A LEFT OUTER JOIN Ingredient_Price_Listing B ON (A.Ingredient_Name = B.Ingredient_Name)
+        WHERE B.Ingredient_Price IS NULL
+        LIMIT 1
+        """
+    )
+    result = [r.Ingredient_Name for r in db.execute(statement)]
+    if result:
+        return {'ingredientName': result[0]}
+    return fetch_minimal_price_listings(db)
+
+
+def fetch_minimal_price_listings(db):
+    print('we out here')
+    statement = text(
+        """
+        SELECT A.Ingredient_Name, COUNT(A.Ingredient_Name) C
+        FROM Ingredient A LEFT OUTER JOIN Ingredient_Price_Listing B ON (A.Ingredient_Name = B.Ingredient_Name)
+        WHERE B.Ingredient_Price IS NOT NULL
+        ORDER BY C ASC
+        LIMIT 1
+        """
+    )
+    result = [r.Ingredient_Name for r in db.execute(statement)]
+    if result:
+        return {'ingredientName':result[0]}
+    return {'ingredientName':''}
+
+
+def add_price_listing(db, name, source, time_created, price=None, units=None):
+    statement = text(
+        "INSERT INTO Ingredient_Price_Listing VALUES (:time_created, :source, :name, :units, :price)"
+    )
+    db.execute(
+        statement,
+        {
+            "price": price,
+            "units": units,
+            "time_created": time_created,
+            "source": source,
+            "name": name,
+        },
+    )
+
+
 def update_price_listing(db, name, source, time_created, price=None, units=None):
     if price is None and units is None:
         return
@@ -143,9 +191,8 @@ def search_ingredient(db, kw):
         "SELECT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw"
     )
     result = db.execute(
-        statement, {"kw": f"%{kw}%"}
+        statement, {"kw": f"%{kw.strip()}%"}
     )
-    # return [{'ingredientName':r.Ingredient_Name} for r in result]
     return [r.Ingredient_Name for r in result]
 
 
@@ -154,7 +201,6 @@ def search_unit(db, kw):
         "SELECT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw"
     )
     result = db.execute(
-        statement, {"kw": f"%{kw}%"}
+        statement, {"kw": f"%{kw.strip()}%"}
     )
-    # return [{'units':r.Recipe_Units} for r in result]
     return [r.Recipe_Units for r in result]

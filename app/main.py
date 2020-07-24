@@ -197,42 +197,30 @@ def delete_price():
     return (jsonify({}), 200)
 
 
-# POST /api/pricelistings
-# GET /api/pricelistings
-'''
-Creates a new price listing. Data should be:
+# [GET, POST] /api/pricelistings
 
-{
-  ingredientName: "foo",
-  source: "Walmart",
-  price: 2.54,
-  units: "lb"
-}
-'''
 @app.route("/api/pricelistings", methods=["GET", "POST"])
 def access_list():
     db = get_db()
     if request.method == 'GET':
-        # add ingredient
         return (jsonify({
-                'ingredientName': igrtnme,
-                  'source': srce,
-                  'price': prce,
-                  'units': unts
-            }), 404)
+                'result':fetch_missing_price_listings(db)['ingredientName']
+            }), 200)
     elif request.method == 'POST':
-        # TODO: add boi
         data = request.get_json()
-        update_price_listing(
+        # Check that primary keys are in request
+        if not all(i in data.keys() for i in ['ingredientName', 'source']):
+            return (jsonify({'error':'Bad request'}), 400)
+        # Request checks out, ok to execute
+        add_price_listing(
             db,
             data["ingredientName"],
             data["source"],
-            datetime.datetime.fromtimestamp(data["timeCreated"]),
-            data.get("price"),
-            data.get("units"),
+            datetime.datetime.now(),
+            price=data.get("price"),
+            units=data.get("units"),
         )
         return (jsonify({'results': 'Item added.'}), 200)
-        # retrieve ingredient
 
 
 # GET /api/search/ingredient?kw=<keyword>

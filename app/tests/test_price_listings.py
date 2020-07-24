@@ -145,10 +145,10 @@ def test_post_price_listing(client, db):
     assert data.Ingredient_Source == "Kroger"
     assert data.Ingredient_Price == 99.01
     assert data.Ingredient_Units == "kg"
-    assert data.Time_Added >= now
+    assert datetime.datetime.strptime(data.Time_Added, "%Y-%m-%d %H:%M:%S.%f") >= now
 
 
-@pytest.mark.parametrize("missing", ["ingredientName", "source", "price", "units"])
+@pytest.mark.parametrize("missing", ["ingredientName", "source"])
 def test_post_price_listing_missing_field(client, db, missing):
     data = {
         "ingredientName": "red onion",
