@@ -18,11 +18,11 @@ import hashlib
 import os
 import datetime
 
-from sql import *
+from app.sql import *
 
 
 app = Flask(__name__)
-app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL")
+app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL", "sqlite:///dev.sqlite")
 
 
 @app.teardown_appcontext
@@ -48,7 +48,11 @@ def get_db():
 def requires_token(f):
     @functools.wraps(f)
     def wrapper():
-        token = request.headers["Authorization"].split(" ")[1]
+        try:
+            token = request.headers["Authorization"].split(" ")[1]
+        except IndexError:
+            abort(401)
+
         if not token:
             abort(401)
         db = get_db()
@@ -92,10 +96,7 @@ served_binary_files = frozenset(("logo192.png", "logo512.png",))
 
 @app.route("/<file>")
 def serve_root_file(file):
-    if file in served_files:
-        return render_template(file)
-
-    if file in served_binary_files:
+    if file in served_files or file in served_binary_files:
         return send_file(f"templates/{file}")
 
     abort(404)
@@ -134,6 +135,7 @@ def login():
 
 @app.route("/api/createaccount")
 def createaccount():
+    print(request.authorization)
     username = request.authorization.username
     password = request.authorization.password
 

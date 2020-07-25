@@ -15,21 +15,11 @@ function App() {
     <Router>
       <div>
         <Switch>
-          <Route path="/login">
-            <LoginPage />
-          </Route>
-          <Route path="/newaccount">
-            <CreateAccountPage />
-          </Route>
-          <Route path="/">
-            <PlanMealPage />
-          </Route>
-          <Route path="/listings">
-            <PriceListingPage />
-          </Route>
-          <Route path="/adminlistings">
-            <PriceListingAdminPage />
-          </Route>
+          <Route exact path="/login" component={LoginPage} />
+          <Route exact path="/newaccount" component={CreateAccountPage} />
+          <Route exact path="/" component={PlanMealPage} />
+          <Route exact path="/listings" component={PriceListingPage} />
+          <Route exact path="/adminlistings" component={PriceListingAdminPage} />
         </Switch>
       </div>
     </Router>
@@ -37,18 +27,52 @@ function App() {
 }
 
 class AppHeader extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.toListings = this.toListings.bind(this);
+    this.toMealPlanner = this.toMealPlanner.bind(this);
+    this.toAdminListings = this.toAdminListings.bind(this);
+
+    this.state = {
+      redirect: ''
+    };
+  }
+
+  toListings(e) {
+    e.preventDefault();
+    this.followLink("/listings");
+  }
+
+  toMealPlanner(e) {
+    e.preventDefault();
+    this.followLink("/");
+  }
+
+  toAdminListings(e) {
+    e.preventDefault();
+    this.followLink("/adminlistings")
+  }
+
+  followLink(route) {
+    console.log(`redirecting to ${route}`)
+    this.setState({redirect: route});
+  }
+
   render() {
+    if (this.state.redirect) {
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {token: this.props.token}
+      }} />;
+    }
+
     return (
       <nav>
         <ul>
-          <li><Link to={{
-            pathname: '/',
-            state: {token: this.props.token}
-          }}>Meal Planner</Link></li>
-          <li><Link to={{
-            pathname: '/listings',
-            state: {token: this.props.token}
-          }}>Price Listings</Link></li>
+          <li><a href="/" onClick={this.toMealPlanner}>Meal Planner</a></li>
+          <li><a href="/listings" onClick={this.toListings}>Listings</a></li>
+          <li><a href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a></li>
         </ul>
       </nav>
     )
@@ -60,10 +84,12 @@ class LoginPage extends React.Component {
     super(props);
     this.state = {
       username: '',
-      password: ''
+      password: '',
+      redirect: '',
+      token: ''
     };
-    if (this.props.location) {
-      this.setState({token: this.props.location.state.token});
+    if (this.props.location.state && this.props.location.state.token) {
+      this.state.token = this.props.location.state.token;
     }
 
     this.handleUsernameChange = this.handleUsernameChange.bind(this);
@@ -89,6 +115,7 @@ class LoginPage extends React.Component {
         password: this.state.password
       }
     }).then(response => {
+      console.log("logged in!");
       this.setState({redirect: '/', token: response.data.token});
     }).catch(error => {
       this.setState({error: error.statusText});
@@ -97,9 +124,10 @@ class LoginPage extends React.Component {
 
   render() {
     if (this.state.redirect) {
+      console.log(`redirecting to ${this.state.redirect}`);
       return <Redirect to={{
         pathname: this.state.redirect,
-        state: {token: this.state.token}
+        state: { token: this.state.token }
       }} />;
     }
 
@@ -126,7 +154,8 @@ class CreateAccountPage extends React.Component {
     this.state = {
       username: '',
       password1: '',
-      password2: ''
+      password2: '',
+      redirect: ''
     };
     this.handleUsernameChange = this.handleUsernameChange.bind(this);
     this.handlePassword1Change = this.handlePassword1Change.bind(this);
@@ -170,13 +199,14 @@ class CreateAccountPage extends React.Component {
     }
 
     axios({
-      method: 'post',
+      method: 'get',
       url: '/api/createaccount',
-      data: {
+      auth: {
         username: this.state.username,
-        password: this.state.password
+        password: this.state.password1
       }
     }).then(response => {
+      console.log("redirecting to /")
       this.setState({redirect: '/', token: response.data.token});
     }).catch(error => {
       this.setState({error: error.statusText});
@@ -214,16 +244,26 @@ class CreateAccountPage extends React.Component {
 
 class PlanMealPage extends React.Component {
   constructor(props) {
+    console.log("constructing plan meal page");
     super(props);
     this.state = {
-      token: ''
+      token: '',
+      redirect: ''
     };
+
+    if (this.props.location.state && this.props.location.state.token) {
+      this.state.token = this.props.location.state.token;
+    } else {
+      this.state.redirect = '/login';
+    }
   }
+
   render() {
+    console.log("rendering plan meal page");
     if (this.state.redirect) {
       return <Redirect to={{
         pathname: this.state.redirect,
-        state: {token: this.state.token}
+        state: { token: this.state.token }
       }} />;
     }
 
@@ -238,6 +278,7 @@ class PlanMealPage extends React.Component {
 
 class PriceListingPage extends React.Component {
   constructor(props) {
+    console.log("constructing price listings");
     super(props);
     this.state = {
       ingredientSuggestions: [],
@@ -248,8 +289,16 @@ class PriceListingPage extends React.Component {
       newIngredientName: '',
       newIngredientSource: '',
       newIngredientPrice: 0,
-      newIngredientUnits: ''
+      newIngredientUnits: '',
+      redirect: ''
     };
+
+    if (this.props.location.state && this.props.location.state.token) {
+      this.state.token = this.props.location.state.token;
+    } else {
+      this.state.redirect = '/login';
+    }
+
     this.searchIngredient = this.searchIngredient.bind(this);
     this.searchUnit = this.searchUnit.bind(this);
     this.fetchNeededPriceListing = this.fetchNeededPriceListing.bind(this);
@@ -278,6 +327,7 @@ class PriceListingPage extends React.Component {
         kw: searchTerm
       }
     }).then(response => {
+      console.log(response.data);
       this.setState({ingredientSuggestions: response.data.results});
     }).catch(error => {
       if (error.status === 401) {
@@ -306,6 +356,7 @@ class PriceListingPage extends React.Component {
         kw: searchTerm
       }
     }).then(response => {
+      console.log(response.data);
       this.setState({unitSuggestions: response.data.results});
     }).catch(error => {
       if (error.status === 401) {
@@ -324,8 +375,9 @@ class PriceListingPage extends React.Component {
         'Authorization': `Bearer ${this.state.token}`
       }
     }).then(response => {
+      console.log(response.data);
       this.setState({
-        newIngredientName: response.data.ingredientName,
+        newIngredientName: response.data.result,
         ingredientSuggestions: []
       });
     }).catch(error => {
@@ -399,7 +451,9 @@ class PriceListingPage extends React.Component {
   }
 
   render() {
+    console.log("rendering price listing page");
     if (this.state.redirect) {
+      console.log("redirecting");
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {token: this.state.token}
@@ -433,7 +487,8 @@ class PriceListingPage extends React.Component {
     }
 
     let form;
-    if (this.state.newIngredientName) {
+    console.log(this.state);
+    if (this.state.newIngredientName && this.state.newIngredientUnits) {
       form = (
           <div>
           <form onSubmit={this.addPriceListing}>
@@ -472,11 +527,14 @@ class PriceListingAdminPage extends React.Component {
     super(props);
     this.state = {
       priceListings: [],
-      token: ''
+      token: '',
+      redirect: ''
     };
 
-    if (this.props.location) {
-      this.setState({token: this.props.location.state.token});
+    if (this.props.location.state && this.props.location.state.token) {
+      this.state.token = this.props.location.state.token;
+    } else {
+      this.state.redirect = '/login';
     }
 
     this.fetchListings();
@@ -495,7 +553,7 @@ class PriceListingAdminPage extends React.Component {
       if (error.status === 401) {
         this.setState({redirect: '/login'});
       } else if (error.status === 403) {
-        // TODO: response for forbidden
+        this.setState({error: 'Not an admin'});
       } else {
         this.setState({error: error.data.error});
       }
@@ -526,7 +584,7 @@ class PriceListingAdminPage extends React.Component {
       if (error.status === 401) {
         this.setState({redirect: '/login'});
       } else if (error.status === 403) {
-        // TODO: forbidden response
+        this.setState({error: 'Not an admin'});
       } else {
         this.setState({error: error.data.error});
       }
@@ -579,6 +637,7 @@ class PriceListingAdminPage extends React.Component {
 
   render() {
     if (this.state.redirect) {
+      console.log("redirecting");
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {token: this.state.token}

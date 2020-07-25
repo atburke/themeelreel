@@ -6,7 +6,7 @@ import hashlib
 from pathlib import Path
 import time
 
-from util import hash_password
+from app.util import hash_password
 
 
 def create_tables(connection):
