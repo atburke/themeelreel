@@ -22,7 +22,7 @@ from app.sql import *
 
 
 app = Flask(__name__)
-app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL", "sqlite:///dev.sqlite")
+app.config["DATABASE_URL"] = os.environ.get("CLEARDB_DATABASE_URL", "sqlite:///dev.sqlite")
 
 
 @app.teardown_appcontext
