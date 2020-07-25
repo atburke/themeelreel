@@ -120,19 +120,19 @@ def fetch_missing_price_listings(db):
 
 
 def fetch_minimal_price_listings(db):
-    print('we out here')
     statement = text(
         """
         SELECT A.Ingredient_Name, COUNT(A.Ingredient_Name) C
         FROM Ingredient A LEFT OUTER JOIN Ingredient_Price_Listing B ON (A.Ingredient_Name = B.Ingredient_Name)
         WHERE B.Ingredient_Price IS NOT NULL
+        GROUP BY A.Ingredient_Name
         ORDER BY C ASC
         LIMIT 1
         """
     )
-    result = [r.Ingredient_Name for r in db.execute(statement)]
+    result = [r for r in db.execute(statement)]
     if result:
-        return {'ingredientName':result[0]}
+        return {'ingredientName':result[0].Ingredient_Name}
     return {'ingredientName':''}
 
 
