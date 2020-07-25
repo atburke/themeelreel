@@ -12,6 +12,7 @@ sqlalchemy = "*"
 flask-sqlalchemy = "*"
 pytest = "*"
 recipe-scrapers = "*"
+pymysql = "*"
 
 [requires]
 python_version = "3.7"
