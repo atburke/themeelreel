@@ -186,7 +186,7 @@ def delete_price_listing(db, name, source, time_created):
     )
 
 
-def search_ingredient(db, kw):
+def get_ingredients(db, kw):
     statement = text(
         "SELECT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw"
     )
@@ -196,7 +196,7 @@ def search_ingredient(db, kw):
     return [r.Ingredient_Name for r in result]
 
 
-def search_unit(db, kw):
+def get_units(db, kw):
     statement = text(
         "SELECT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw"
     )
