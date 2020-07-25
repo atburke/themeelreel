@@ -229,7 +229,7 @@ def access_list():
 def search_ingr():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':search_ingredient(db, kw)}), 200)
+    return (jsonify({'results':get_ingredients(db, kw)}), 200)
 
 
 # GET /api/search/unit?kw=<keyword>
@@ -238,4 +238,4 @@ def search_ingr():
 def search_unit():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':search_ingredient(db, kw)}), 200)
+    return (jsonify({'results':get_units(db, kw)}), 200)
