@@ -175,7 +175,7 @@ def update_price():
         db,
         data["ingredientName"],
         data["source"],
-        datetime.datetime.fromtimestamp(data["timeCreated"]),
+        data["timeCreated"],
         data.get("price"),
         data.get("units"),
     )
@@ -194,7 +194,7 @@ def delete_price():
         db,
         data["ingredientName"],
         data["source"],
-        datetime.datetime.fromtimestamp(data["timeCreated"]),
+        data["timeCreated"],
     )
     return (jsonify({}), 200)
 
@@ -219,7 +219,8 @@ def access_list():
             data["ingredientName"],
             data["source"],
             datetime.datetime.now(),
-            price=data.get("price"),
+            price=float(data["price"]),
+            amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
         return (jsonify({'results': 'Item added.'}), 200)

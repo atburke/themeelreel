@@ -303,6 +303,7 @@ class PriceListingPage extends React.Component {
     this.searchUnit = this.searchUnit.bind(this);
     this.fetchNeededPriceListing = this.fetchNeededPriceListing.bind(this);
     this.setPrice = this.setPrice.bind(this);
+    this.setAmount = this.setAmount.bind(this);
     this.selectUnits = this.selectUnits.bind(this);
     this.selectIngredient = this.selectIngredient.bind(this);
     this.selectSource = this.selectSource.bind(this);
@@ -405,6 +406,10 @@ class PriceListingPage extends React.Component {
     this.setState({newIngredientPrice: e.target.value});
   }
 
+  setAmount(e) {
+    this.setState({newIngredientAmount: e.target.value});
+  }
+
   addPriceListing(e) {
     if (e) {
       e.preventDefault();
@@ -413,6 +418,7 @@ class PriceListingPage extends React.Component {
     let newListing = {
       ingredientName: this.state.newIngredientName,
       price: this.state.newIngredientPrice,
+      amount: this.state.newIngredientAmount,
       source: this.state.newIngredientSource,
       units: this.state.newIngredientUnits
     };
@@ -426,6 +432,11 @@ class PriceListingPage extends React.Component {
 
     if (newListing.price < 0) {
       this.setState({error: 'Price cannot be negative'});
+      return;
+    }
+
+    if (newListing.amount && newListing.amount < 0) {
+      this.setState({error: 'Amount cannot be negative'});
       return;
     }
 
@@ -461,10 +472,10 @@ class PriceListingPage extends React.Component {
     }
 
     let ingredientOptions;
-    if (this.state.ingredientOptions) {
+    if (this.state.ingredientSuggestions) {
       ingredientOptions = (
         <ul>
-          {this.ingredientSuggestions.map(name => (
+          {this.state.ingredientSuggestions.map(name => (
             <li><button onClick={() => this.selectIngredient(name)}>{name}</button></li>
           ))}
         </ul>
@@ -474,10 +485,10 @@ class PriceListingPage extends React.Component {
     }
 
     let unitOptions;
-    if (this.state.unitOptions) {
+    if (this.state.unitSuggestions) {
       unitOptions = (
         <ul>
-        {this.unitSuggestions.map(unit => (
+        {this.state.unitSuggestions.map(unit => (
           <li><button onClick={() => this.selectUnits(unit)}>{unit}</button></li>
         ))}
         </ul>
@@ -493,8 +504,12 @@ class PriceListingPage extends React.Component {
           <div>
           <form onSubmit={this.addPriceListing}>
             <p>{this.state.newIngredientName}</p>
-            <input type="text" value={this.state.newIngredientSource} onChange={this.selectSource} />
-            <input type="number" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
+            <label htmlFor="source">Source</label>
+            <input type="text" id="source" value={this.state.newIngredientSource} onChange={this.selectSource} />
+            <label htmlFor="price">Price</label>
+            $<input type="number" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
+            <label htmlFor="amount">Amount</label>
+            <input type="number" id="amount" min="0" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
             <p>{this.state.newIngredientUnits}</p>
             <input type="submit" value="Submit" />
           </form>
@@ -548,7 +563,7 @@ class PriceListingAdminPage extends React.Component {
         'Authorization': `Bearer ${this.state.token}`
       }
     }).then(response => {
-      this.setState({priceListings: response.data.priceListings});
+      this.setState({priceListings: response.data.results});
     }).catch(error => {
       if (error.status === 401) {
         this.setState({redirect: '/login'});
@@ -568,14 +583,11 @@ class PriceListingAdminPage extends React.Component {
         'Authorization': `Bearer ${this.state.token}`
       },
       data: {
-        update: {
-          ingredientName: listing.ingredientName,
-          source: listing.source,
-          timeCreated: listing.timeCreated
-        },
-        set: {
-          price: listing.price
-        }
+        ingredientName: listing.ingredientName,
+        source: listing.source,
+        timeCreated: listing.timeCreated,
+        price: listing.price,
+        units: listing.units
       }
     }).then(response => {
       this.fetchListings();
@@ -617,7 +629,8 @@ class PriceListingAdminPage extends React.Component {
     });
   }
 
-  updateListingLocally(listing) {
+  updateListingLocally(listing, price, units) {
+    console.log(listing);
     this.setState({priceListings: this.state.priceListings.map(l => {
       if (l.ingredientName === listing.ingredientName &&
         l.source === listing.source &&
@@ -626,8 +639,8 @@ class PriceListingAdminPage extends React.Component {
           ingredientName: l.ingredientName,
           source: l.source,
           timeCreated: l.timeCreated,
-          price: listing.price,
-          units: listing.units
+          price: price,
+          units: units
         };
       }
 
@@ -648,8 +661,8 @@ class PriceListingAdminPage extends React.Component {
     const listings = this.state.priceListings.map(listing =>
       <tr key={`${listing.ingredientName}:${listing.source}:${listing.timeCreated}`}>
         <td>{listing.ingredientName}</td>
-        <td>$<input type="number" min="0" step="0.01" value={listing.price} onChange={() => this.updateListingLocally(listing)} /></td>
-        <td><input type="text" value={listing.units} onChange={() => this.updateListingLocally(listing)} /></td>
+        <td>$<input type="number" min="0" step="0.01" value={listing.price} onChange={e => this.updateListingLocally(listing, e.target.value, listing.units)} /></td>
+        <td><input type="text" value={listing.units} onChange={e => this.updateListingLocally(listing, listing.price, e.target.value)} /></td>
         <td>{listing.source}</td>
         <td>{listing.timeCreated}</td>
         <td><button onClick={() => this.updateListing(listing)}>Update</button></td>
@@ -661,6 +674,15 @@ class PriceListingAdminPage extends React.Component {
       <div>
       <AppHeader token={this.state.token} />
         <table>
+          <tr>
+            <th>Ingredient Name</th>
+            <th>Price</th>
+            <th>Units</th>
+            <th>Source</th>
+            <th>Time Created</th>
+            <th></th>
+            <th></th>
+          </tr>
           {listings}
         </table>
         <p>{this.state.error}</p>

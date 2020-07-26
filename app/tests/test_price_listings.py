@@ -131,7 +131,8 @@ def test_post_price_listing(client, db):
         json={
             "ingredientName": "red onion",
             "source": "Kroger",
-            "price": 99.01,
+            "price": 10.0,
+            "amount": 2,
             "units": "kg",
         },
     )
@@ -143,7 +144,7 @@ def test_post_price_listing(client, db):
     data = results[0]
     assert data.Ingredient_Name == "red onion"
     assert data.Ingredient_Source == "Kroger"
-    assert data.Ingredient_Price == 99.01
+    assert data.Ingredient_Price == 5.0
     assert data.Ingredient_Units == "kg"
     assert datetime.datetime.strptime(data.Time_Added, "%Y-%m-%d %H:%M:%S.%f") >= now
 

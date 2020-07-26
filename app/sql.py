@@ -136,7 +136,10 @@ def fetch_minimal_price_listings(db):
     return {'ingredientName':''}
 
 
-def add_price_listing(db, name, source, time_created, price=None, units=None):
+def add_price_listing(db, name, source, time_created, price=None, amount=None, units=None):
+    if price and amount:
+        price = price / amount
+
     statement = text(
         "INSERT INTO Ingredient_Price_Listing VALUES (:time_created, :source, :name, :units, :price)"
     )
