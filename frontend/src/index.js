@@ -120,6 +120,7 @@ class LoginPage extends React.Component {
       console.log("logged in!");
       this.setState({redirect: '/', token: response.data.token});
     }).catch(error => {
+      console.log(error.data);
       this.setState({error: error.statusText});
     });
   }

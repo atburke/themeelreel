@@ -91,7 +91,7 @@ def create_user(connection, username, password):
     # Create user
     salt = uuid4().hex  # Generate salt from UUID
     pwh = hash_password(password, salt)
-    insert = text("INSERT INTO User VALUES (:username, :password_hash, :salt, FALSE)")
+    insert = text("INSERT INTO User VALUES (:username, :password_hash, :salt, TRUE)")   # TEMPORARY
     connection.execute(
         insert, {"username": username, "password_hash": pwh, "salt": salt}
     )
@@ -106,7 +106,7 @@ def fetch_all_price_listings(db):
         {
             "ingredientName": r.Ingredient_Name,
             "source": r.Ingredient_Source,
-            "timeCreated": r.Time_Added,
+            "timeCreated": str(r.Time_Added),
             "units": r.Ingredient_Units,
             "price": r.Ingredient_Price,
         }
