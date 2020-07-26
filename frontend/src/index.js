@@ -529,6 +529,9 @@ class PriceListingPage extends React.Component {
         <label htmlFor="searchUnit">Select Units</label>
         <input id="searchUnit" value={this.unitSearchTerm} onChange={this.searchUnit} />
         {unitOptions}
+        <br />
+        {this.state.newIngredientName ? <p>{this.state.newIngredientName}</p> : ''}
+        {this.state.newIngredientUnits ? <p>{this.state.newIngredientUnits}</p> : ''}
         <hr />
         {form}
         {this.state.error}

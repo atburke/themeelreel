@@ -33,7 +33,7 @@ def check_token(connection, token):
     if not result:
         return None
     username, timestamp = result[0]
-    if time.time() - timestamp >= 3600:
+    if int(time.time()) - int(timestamp) >= 3600:
         return None
     update = text("UPDATE Token SET TimeCreated=:now WHERE username=:username")
     connection.execute(update, {"now": int(time.time()), "username": username})
@@ -191,7 +191,7 @@ def delete_price_listing(db, name, source, time_created):
 
 def get_ingredients(db, kw):
     statement = text(
-        "SELECT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw"
+        "SELECT DISTINCT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw ORDER BY Ingredient_Name"
     )
     result = db.execute(
         statement, {"kw": f"%{kw.strip()}%"}
@@ -201,7 +201,7 @@ def get_ingredients(db, kw):
 
 def get_units(db, kw):
     statement = text(
-        "SELECT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw"
+        "SELECT DISTINCT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw ORDER BY Recipe_Units"
     )
     result = db.execute(
         statement, {"kw": f"%{kw.strip()}%"}
