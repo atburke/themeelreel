@@ -56,7 +56,9 @@ class AppHeader extends React.Component {
 
   followLink(route) {
     console.log(`redirecting to ${route}`)
-    this.setState({redirect: route});
+    if (route !== this.props.here) {
+      this.setState({redirect: route});
+    }
   }
 
   render() {
@@ -269,7 +271,7 @@ class PlanMealPage extends React.Component {
 
     return (
       <div>
-        <AppHeader token={this.state.token} />
+        <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <p>NOTHING TO SEE HERE</p>
       </div>
     );
@@ -521,7 +523,7 @@ class PriceListingPage extends React.Component {
 
     return (
       <div>
-      <AppHeader token={this.state.token} />
+      <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <label htmlFor="searchIngredient">Search for an ingredient to add a price listing for:</label>
         <input id="searchIngredient" value={this.ingredientSearchTerm} onChange={this.searchIngredient}/>
         {ingredientOptions}
@@ -675,7 +677,7 @@ class PriceListingAdminPage extends React.Component {
 
     return (
       <div>
-      <AppHeader token={this.state.token} />
+      <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <table>
           <tr>
             <th>Ingredient Name</th>

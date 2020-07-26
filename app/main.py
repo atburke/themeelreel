@@ -135,7 +135,6 @@ def login():
 
 @app.route("/api/createaccount")
 def createaccount():
-    print(request.authorization)
     username = request.authorization.username
     password = request.authorization.password
 

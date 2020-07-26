@@ -37,7 +37,7 @@ def check_token(connection, token):
         return None
     username, timestamp = result[0]
     now = datetime.datetime.now()
-    if now - timestamp >= datetime.timedelta(seconds=3600):
+    if now - datetime.datetime.strptime(timestamp.split(".")[0], TS_FORMAT) >= datetime.timedelta(seconds=3600):
         return None
 
     update = text("UPDATE Token SET TimeCreated=:now WHERE username=:username")
@@ -58,6 +58,7 @@ def password_check(connection, username, password):
     result = connection.execute(fetch_pws, {"username": username}).fetchall()
     if not result:
         return False
+
     pwh, salt = result[0]
     digest = hash_password(password, salt)
     return digest == pwh
@@ -69,7 +70,7 @@ def add_token_for_user(connection, username, token):
     connection.execute(statement, {"user": username})
     statement = text("INSERT INTO Token VALUES (:user, :token, :now)")
     connection.execute(
-        statement, {"user": username, "token": token, "now": now.strftime(TS_FORMAT)}
+        statement, {"user": username, "token": token, "now": now}
     )
 
 
