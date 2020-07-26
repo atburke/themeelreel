@@ -60,10 +60,13 @@ def password_check(connection, username, password):
     fetch_pws = text("SELECT Password_Hash, Salt FROM User WHERE Username=:username")
     result = connection.execute(fetch_pws, {"username": username}).fetchall()
     if not result:
+        print(f"User {username} not found")
         return False
 
     pwh, salt = result[0]
+    print(f"hash={pwh}, type={type(pwh)}")
     digest = hash_password(password, salt)
+    print(f"digest={digest}, type={type(digest)}")
     return digest == pwh
 
 
