@@ -37,11 +37,11 @@ def check_token(connection, token):
         return None
     username, timestamp = result[0]
     now = datetime.datetime.now()
-    if now - datetime.datetime.strptime(timestamp, TS_FORMAT) >= datetime.timedelta(seconds=3600):
+    if now - timestamp >= datetime.timedelta(seconds=3600):
         return None
 
     update = text("UPDATE Token SET TimeCreated=:now WHERE username=:username")
-    connection.execute(update, {"now": now.strftime(TS_FORMAT), "username": username})
+    connection.execute(update, {"now": now, "username": username})
     return username
 
 
