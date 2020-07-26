@@ -5,8 +5,11 @@ import time
 import hashlib
 from pathlib import Path
 import time
+import datetime
 
 from app.util import hash_password
+
+TS_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def create_tables(connection):
@@ -33,10 +36,12 @@ def check_token(connection, token):
     if not result:
         return None
     username, timestamp = result[0]
-    if int(time.time()) - int(timestamp) >= 3600:
+    now = datetime.datetime.now()
+    if now - datetime.datetime.strptime(timestamp, TS_FORMAT) >= datetime.timedelta(seconds=3600):
         return None
+
     update = text("UPDATE Token SET TimeCreated=:now WHERE username=:username")
-    connection.execute(update, {"now": int(time.time()), "username": username})
+    connection.execute(update, {"now": now.strftime(TS_FORMAT), "username": username})
     return username
 
 
@@ -59,11 +64,12 @@ def password_check(connection, username, password):
 
 
 def add_token_for_user(connection, username, token):
+    now = datetime.datetime.now()
     statement = text("DELETE FROM Token WHERE Username = :user")
     connection.execute(statement, {"user": username})
     statement = text("INSERT INTO Token VALUES (:user, :token, :now)")
     connection.execute(
-        statement, {"user": username, "token": token, "now": int(time.time())}
+        statement, {"user": username, "token": token, "now": now.strftime(TS_FORMAT)}
     )
 
 

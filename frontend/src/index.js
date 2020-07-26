@@ -509,7 +509,7 @@ class PriceListingPage extends React.Component {
             <label htmlFor="price">Price</label>
             $<input type="number" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
             <label htmlFor="amount">Amount</label>
-            <input type="number" id="amount" min="0" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
+            <input type="number" id="amount" min="0" step="0.01" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
             <p>{this.state.newIngredientUnits}</p>
             <input type="submit" value="Submit" />
           </form>
