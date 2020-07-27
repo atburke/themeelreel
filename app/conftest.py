@@ -1,13 +1,5 @@
-import sys
-from pathlib import Path
-
-app_root = str(Path(__file__).parents[1])
-print(app_root)
-if app_root not in sys.path:
-    sys.path.append(app_root)
-
 import pytest
-from main import app
+from app.main import app
 import sqlalchemy
 
 from sqlalchemy.sql import text
@@ -17,9 +9,9 @@ import hashlib
 from secrets import token_hex
 import datetime
 
-import sql
-from main import *
-from util import *
+import app.sql as sql
+from app.main import *
+from app.util import *
 
 TEST_DATABASE = "sqlite:///test.sqlite"
 

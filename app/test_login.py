@@ -1,5 +1,5 @@
-from conftest import *
-from util import hash_password
+from app.conftest import *
+from app.util import hash_password
 from sqlalchemy.sql import text
 
 

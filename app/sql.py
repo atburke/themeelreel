@@ -9,7 +9,7 @@ import datetime
 
 from app.util import hash_password
 
-TS_FORMAT = "%Y-%m-%d %H:%M:%S"
+TS_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 def create_tables(connection):
@@ -38,7 +38,7 @@ def check_token(connection, token):
     username, timestamp = result[0]
     now = datetime.datetime.now()
     if isinstance(timestamp, str):
-        timestamp = datetime.datetime.strptime(timestamp.split(".")[0], TS_FORMAT)
+        timestamp = datetime.datetime.strptime(timestamp, TS_FORMAT)
 
     if now - timestamp >= datetime.timedelta(seconds=3600):
         return None

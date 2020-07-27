@@ -1,4 +1,4 @@
-from conftest import *
+from app.conftest import *
 
 from sqlalchemy.sql import text
 import pytest
@@ -48,18 +48,21 @@ def test_update_price_listing(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
             "price": 4.11,
             "units": "L",
         },
     )
     assert r.status_code == 200
 
+    r = db.execute("SELECT * FROM Ingredient_Price_Listing").fetchall()
+    print(r)
+
     statement = text(
         "SELECT * FROM Ingredient_Price_Listing WHERE Ingredient_Name = 'carrot' AND Ingredient_Source = 'Walmart' AND Time_Added = :now"
     )
     result = db.execute(statement, {"now": ts}).fetchall()
-    assert result != []
+    assert len(result) == 1
     data = result[0]
     assert data.Ingredient_Price == 4.11
     assert data.Ingredient_Units == "L"
@@ -75,7 +78,7 @@ def test_update_price_listing_not_admin(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
             "price": 4.11,
             "units": "L",
         },
@@ -93,7 +96,7 @@ def test_delete_price_listing(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
         },
     )
     assert r.status_code == 200
