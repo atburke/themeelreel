@@ -10,37 +10,26 @@ from random import randrange
 
 
 def find_meals(
-    db,
-    budget,
-    days,
-    calories_per_day,
-    include_ingredients=None,
-    exclude_ingredients=None,
-    min_ingredients=None,
-    max_ingredients=None,
+    db, budget, total_calories, min_ingredients=None, max_ingredients=None,
 ):
-    if not include_ingredients:
-        include_ingredients = []
-
-    if not exclude_ingredients:
-        exclude_ingredients = []
-
     if not min_ingredients:
         min_ingredients = {}
 
     if not max_ingredients:
         max_ingredients = {}
 
-    calories_needed = days * calories_per_day
     budget_left = budget
+    calories_needed = total_calories
 
-    recipes = fetch_recipes_excluding(db, exclude_ingredients)
+    recipes = fetch_recipes(db)
 
-    minimum_plan_cost = math.ceil(calories_needed / recipes[0].calories) * recipes[0].cost
+    minimum_plan_cost = (
+        math.ceil(calories_needed / recipes[0].calories) * recipes[0].cost
+    )
     if minimum_plan_cost > budget:
         raise ValueError("Not enough money")
 
-    means, variances = online_stats(r.costPerCalorie for r in recipes)
+    means, variances = online_stats([r.costPerCalorie for r in recipes])
     price_cutoffs = [mean + 2 * math.sqrt(var) for mean, var in zip(means, variances)]
 
     @lru_cache(maxsize=8)
@@ -51,11 +40,15 @@ def find_meals(
     max_iterations = 1_000
     n = 0
 
+    print(f"Need to find {total_calories} calories for ${budget} or less")
+
     # crossing fingers that this converges
     while budget_left < 0 or calories_needed > 0:
-        n += 1
-        if max_iterations == max_iterations:
+        print(n)
+        if n == max_iterations:
             raise RuntimeError(f"Could not create recipe within {n} iterations")
+
+        n += 1
 
         i = max_search_index(budget_left / calories_needed)
         if i == 0 or budget_left < 0:
@@ -67,6 +60,10 @@ def find_meals(
             new_meal = randrange(i)
             calories_needed -= recipes[new_meal].calories
             budget_left -= recipes[new_meal].cost
+            meal_selections.append(new_meal)
+
+        print(f"budget left: {budget_left}")
+        print(f"calories needed: {calories_needed}")
 
     # TODO: fulfill other constraints
-    return [recipes[i].name for i in meal_selections]
+    return [recipes[i] for i in meal_selections]

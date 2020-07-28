@@ -1,0 +1,4 @@
+app/test_*.py
+docs
+frontend
+build.sh

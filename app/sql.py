@@ -75,9 +75,7 @@ def add_token_for_user(connection, username, token):
     statement = text("DELETE FROM Token WHERE Username = :user")
     connection.execute(statement, {"user": username})
     statement = text("INSERT INTO Token VALUES (:user, :token, :now)")
-    connection.execute(
-        statement, {"user": username, "token": token, "now": now}
-    )
+    connection.execute(statement, {"user": username, "token": token, "now": now})
 
 
 def create_user(connection, username, password):
@@ -94,7 +92,9 @@ def create_user(connection, username, password):
     # Create user
     salt = uuid4().hex  # Generate salt from UUID
     pwh = hash_password(password, salt)
-    insert = text("INSERT INTO User VALUES (:username, :password_hash, :salt, TRUE)")   # TEMPORARY
+    insert = text(
+        "INSERT INTO User VALUES (:username, :password_hash, :salt, TRUE)"
+    )  # TEMPORARY
     connection.execute(
         insert, {"username": username, "password_hash": pwh, "salt": salt}
     )
@@ -128,7 +128,7 @@ def fetch_missing_price_listings(db):
     )
     result = [r.Ingredient_Name for r in db.execute(statement)]
     if result:
-        return {'ingredientName': result[0]}
+        return {"ingredientName": result[0]}
     return fetch_minimal_price_listings(db)
 
 
@@ -145,11 +145,13 @@ def fetch_minimal_price_listings(db):
     )
     result = [r for r in db.execute(statement)]
     if result:
-        return {'ingredientName':result[0].Ingredient_Name}
-    return {'ingredientName':''}
+        return {"ingredientName": result[0].Ingredient_Name}
+    return {"ingredientName": ""}
 
 
-def add_price_listing(db, name, source, time_created, price=None, amount=None, units=None):
+def add_price_listing(
+    db, name, source, time_created, price=None, amount=None, units=None
+):
     if price and amount:
         price = price / amount
 
@@ -206,9 +208,7 @@ def get_ingredients(db, kw):
     statement = text(
         "SELECT DISTINCT Ingredient_Name FROM Ingredient WHERE Ingredient_Name LIKE :kw ORDER BY Ingredient_Name"
     )
-    result = db.execute(
-        statement, {"kw": f"%{kw.strip()}%"}
-    )
+    result = db.execute(statement, {"kw": f"%{kw.strip()}%"})
     return [r.Ingredient_Name for r in result]
 
 
@@ -216,35 +216,27 @@ def get_units(db, kw):
     statement = text(
         "SELECT DISTINCT Recipe_Units FROM Ingredient WHERE Recipe_Units LIKE :kw ORDER BY Recipe_Units"
     )
-    result = db.execute(
-        statement, {"kw": f"%{kw.strip()}%"}
-    )
+    result = db.execute(statement, {"kw": f"%{kw.strip()}%"})
     return [r.Recipe_Units for r in result]
 
 
-def fetch_recipes_excluding(db, excludes):
+def fetch_recipes(db):
     statement = text(
         "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories, Recipe_Cost / Calories AS costPerCalorie "
         "FROM Recipe NATURAL JOIN Requires "
-        "WHERE Ingredient_Name NOT IN :excludes "
         "ORDER BY costPerCalorie"
     )
+    return db.execute(statement).fetchall()
 
-    return db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
 
-
-def fetch_recipes_including(db, includes):
+def fetch_recipe_by_name(db, name):
     statement = text(
-        "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories, Recipe_Cost / Calories AS costPerCalorie "
-        "FROM Recipe NATURAL JOIN Requires NATURAL JOIN Ingredient "
-        "WHERE name IN "
-        "(SELECT DISTINCT Recipe_Name AS name "
-        "FROM Recipe NATURAL JOIN Requires "
-        "WHERE Ingredient_Name IN :includes) "
-        "ORDER BY costPerCalorie"
+        "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories "
+        "FROM Recipe "
+        "WHERE name = :name"
     )
-
-    return db.execute(statement, {"includes": includes})
+    result = db.execute(statement, {"name": name}).fetchall()
+    return result[0]
 
 
 def add_meal_plan_for_user(db, username, plan):

@@ -21,8 +21,8 @@ def online_stats(data):
             means[i] = x
 
         else:
-            delta = x - means[i-1]
-            means[i] = delta / (i + 1)
+            delta = x - means[i - 1]
+            means[i] = means[i - 1] + delta / (i + 1)
             M2 += delta * (x - means[i])
             variances[i] = M2 / i
 

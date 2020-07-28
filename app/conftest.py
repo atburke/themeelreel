@@ -46,18 +46,39 @@ def create_price_listing(db, name, source, price, units):
     return now
 
 
-def create_recipe(db, name, type, ingredients, servings=1, calories=500):
+def create_recipe(
+    db, name, type="Dinner", ingredients=None, price=1.0, servings=1, calories=500
+):
+    if not ingredients:
+        ingredients = []
+
     statement = text(
-        "INSERT INTO Recipe VALUES (:name, :type, 'example.com', 'example.com', 0, :servings, :calories)"
+        "INSERT INTO Recipe VALUES (:name, :type, 'example.com', 'example.com', :price, :servings, :calories)"
     )
     db.execute(
         statement,
-        {"name": name, "type": type, "servings": servings, "calories": calories},
+        {
+            "name": name,
+            "type": type,
+            "price": price,
+            "servings": servings,
+            "calories": calories,
+        },
     )
 
     for ing in ingredients:
-        statement = text("INSERT INTO Ingredient VALUES (:name, :units, 0.00)")
-        db.execute(statement, {"name": ing["name"], "units": ing["units"]})
+        if not db.execute(text("SELECT * FROM Requires WHERE Ingredient_Name = :name"), {"name": ing["name"]}).fetchall():
+            print(f"{ing['name']} doesn't exist")
+            statement = text("INSERT INTO Ingredient VALUES (:name, :units, :price)")
+            db.execute(
+                statement,
+                {
+                    "name": ing["name"],
+                    "units": ing["units"],
+                    "price": ing.get("price", 1.0),
+                },
+            )
+
         statement = text(
             "INSERT INTO Requires VALUES (:name, :recipe_name, :amount, :units)"
         )

@@ -22,7 +22,9 @@ from app.sql import *
 
 
 app = Flask(__name__)
-app.config["DATABASE_URL"] = os.environ.get("CLEARDB_DATABASE_URL", "sqlite:///dev.sqlite")
+app.config["DATABASE_URL"] = os.environ.get(
+    "CLEARDB_DATABASE_URL", "sqlite:///dev.sqlite"
+)
 
 
 @app.teardown_appcontext
@@ -124,7 +126,7 @@ def login():
     if password_check(db, username, password):
         token = token_hex(32)
         add_token_for_user(db, username, token)
-        return (jsonify({'token': token}), 200)
+        return (jsonify({"token": token}), 200)
     else:
         return (jsonify({"error": "Incorrect username and password combination"}), 401)
 
@@ -151,6 +153,7 @@ def createaccount():
     token = token_hex(32)
     add_token_for_user(db, username, token)
     return (jsonify({"token": token}), 200)
+
 
 # GET /api/adminpricelistings
 
@@ -190,28 +193,27 @@ def delete_price():
     db = get_db()
     data = request.get_json()
     delete_price_listing(
-        db,
-        data["ingredientName"],
-        data["source"],
-        data["timeCreated"],
+        db, data["ingredientName"], data["source"], data["timeCreated"],
     )
     return (jsonify({}), 200)
 
 
 # [GET, POST] /api/pricelistings
 
+
 @app.route("/api/pricelistings", methods=["GET", "POST"])
 def access_list():
     db = get_db()
-    if request.method == 'GET':
-        return (jsonify({
-                'result':fetch_missing_price_listings(db)['ingredientName']
-            }), 200)
-    elif request.method == 'POST':
+    if request.method == "GET":
+        return (
+            jsonify({"result": fetch_missing_price_listings(db)["ingredientName"]}),
+            200,
+        )
+    elif request.method == "POST":
         data = request.get_json()
         # Check that primary keys are in request
-        if not all(i in data.keys() for i in ['ingredientName', 'source']):
-            return (jsonify({'error':'Bad request'}), 400)
+        if not all(i in data.keys() for i in ["ingredientName", "source"]):
+            return (jsonify({"error": "Bad request"}), 400)
         # Request checks out, ok to execute
         add_price_listing(
             db,
@@ -222,22 +224,24 @@ def access_list():
             amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
-        return (jsonify({'results': 'Item added.'}), 200)
+        return (jsonify({"results": "Item added."}), 200)
 
 
 # GET /api/search/ingredient?kw=<keyword>
+
 
 @app.route("/api/search/ingredient")
 def search_ingr():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':get_ingredients(db, kw)}), 200)
+    return (jsonify({"results": get_ingredients(db, kw)}), 200)
 
 
 # GET /api/search/unit?kw=<keyword>
+
 
 @app.route("/api/search/unit")
 def search_unit():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':get_units(db, kw)}), 200)
+    return (jsonify({"results": get_units(db, kw)}), 200)
