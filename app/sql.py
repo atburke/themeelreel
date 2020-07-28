@@ -220,3 +220,32 @@ def get_units(db, kw):
         statement, {"kw": f"%{kw.strip()}%"}
     )
     return [r.Recipe_Units for r in result]
+
+
+def fetch_recipes_excluding(db, excludes):
+    statement = text(
+        "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories, Recipe_Cost / Calories AS costPerCalorie "
+        "FROM Recipe NATURAL JOIN Requires "
+        "WHERE Ingredient_Name NOT IN :excludes "
+        "ORDER BY costPerCalorie"
+    )
+
+    return db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+
+
+def fetch_recipes_including(db, includes):
+    statement = text(
+        "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories, Recipe_Cost / Calories AS costPerCalorie "
+        "FROM Recipe NATURAL JOIN Requires NATURAL JOIN Ingredient "
+        "WHERE name IN "
+        "(SELECT DISTINCT Recipe_Name AS name "
+        "FROM Recipe NATURAL JOIN Requires "
+        "WHERE Ingredient_Name IN :includes) "
+        "ORDER BY costPerCalorie"
+    )
+
+    return db.execute(statement, {"includes": includes})
+
+
+def add_meal_plan_for_user(db, username, plan):
+    pass
