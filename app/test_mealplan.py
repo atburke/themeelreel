@@ -44,7 +44,34 @@ def test_generate_mealplan_no_constraints(db):
 
 
 def test_generate_mealplan_not_possible(db):
-    pass
+    clear_tables(db)
+    clear_tables(db)
+    common_ingredients = [
+        {"name": "carrots", "units": "g", "amount": 20},
+        {"name": "apples", "units": "lb", "amount": 0.2},
+        {"name": "spaghetti", "units": "lb", "amount": 1},
+    ]
+    for i, recipe in enumerate(
+        [
+            (5.00, 500),
+            (8.00, 750),
+            (3.39, 300),
+            (13.32, 1000)
+        ]
+    ):
+        create_recipe(
+            db,
+            f"recipe_{i}",
+            ingredients=common_ingredients,
+            price=recipe[0],
+            calories=recipe[1],
+        )
+
+    days = 10
+    budget = 15 * days
+    cals = 2000 * days
+    with pytest.raises(ValueError):
+        meals = find_meals(db, budget, cals)
 
 
 def test_generate_mealplan_minimum_amounts(db):
