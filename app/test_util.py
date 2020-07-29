@@ -6,6 +6,7 @@ import statistics
 
 from app.util import *
 
+
 @given(a=st.lists(st.integers(), min_size=2))
 def test_online_stats(a):
     o_mean, o_var = online_stats(a)

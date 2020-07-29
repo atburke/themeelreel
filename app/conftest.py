@@ -67,7 +67,10 @@ def create_recipe(
     )
 
     for ing in ingredients:
-        if not db.execute(text("SELECT * FROM Requires WHERE Ingredient_Name = :name"), {"name": ing["name"]}).fetchall():
+        if not db.execute(
+            text("SELECT * FROM Requires WHERE Ingredient_Name = :name"),
+            {"name": ing["name"]},
+        ).fetchall():
             print(f"{ing['name']} doesn't exist")
             statement = text("INSERT INTO Ingredient VALUES (:name, :units, :price)")
             db.execute(

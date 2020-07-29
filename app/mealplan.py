@@ -6,7 +6,7 @@ from itertools import accumulate
 import math
 from bisect import bisect
 from functools import lru_cache
-from random import randrange
+from random import randrange, shuffle
 
 
 def find_meals(
@@ -40,13 +40,10 @@ def find_meals(
     max_iterations = 1_000
     n = 0
 
-    print(f"Need to find {total_calories} calories for ${budget} or less")
-
     # crossing fingers that this converges
     while budget_left < 0 or calories_needed > 0:
-        print(n)
         if n == max_iterations:
-            raise RuntimeError(f"Could not create recipe within {n} iterations")
+            raise RuntimeError(f"Could not create plan within {n} iterations")
 
         n += 1
 
@@ -62,8 +59,23 @@ def find_meals(
             budget_left -= recipes[new_meal].cost
             meal_selections.append(new_meal)
 
-        print(f"budget left: {budget_left}")
-        print(f"calories needed: {calories_needed}")
-
     # TODO: fulfill other constraints
     return [recipes[i] for i in meal_selections]
+
+
+def distribute_meals(meals, days):
+    meal_plan = [[] for _ in range(days)]
+    meal_source = sorted(meals, key=lambda r: -r.calories)
+    for recipe in meal_source:
+        pos = min(
+            enumerate(meal_plan),
+            key=lambda idx_m: (sum(r.calories for r in idx_m[1]), idx_m[0]),
+        )[0]
+        meal_plan[pos].append(recipe)
+        print(meal_plan)
+
+    for day_plan in meal_plan:
+        shuffle(day_plan)
+
+    shuffle(meal_plan)
+    return meal_plan
