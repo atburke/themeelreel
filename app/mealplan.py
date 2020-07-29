@@ -72,10 +72,6 @@ def distribute_meals(meals, days):
             key=lambda idx_m: (sum(r.calories for r in idx_m[1]), idx_m[0]),
         )[0]
         meal_plan[pos].append(recipe)
-        print(meal_plan)
-
-    for day_plan in meal_plan:
-        shuffle(day_plan)
 
     shuffle(meal_plan)
     return meal_plan

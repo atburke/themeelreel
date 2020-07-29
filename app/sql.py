@@ -239,5 +239,24 @@ def fetch_recipe_by_name(db, name):
     return result[0]
 
 
-def add_meal_plan_for_user(db, username, plan):
-    pass
+def add_meal_plan_for_user(db, username, plan, title=None):
+    # this scheme to find the next id would have concurrency issues, but this
+    # app is not concurrent and it's the only thing that will be accessing
+    # the db, so we should be good
+    statement = text(
+        "SELECT MIN(Meal_Plan_ID) AS minID, MAX(Meal_Plan_ID) AS maxID "
+        "FROM Meal_Plan"
+    )
+    min_id, max_id = db.execute(statment).fetchall()[0]
+    plan_id = min_id - 1 if min_id > 1 else max_id + 1
+    now = datetime.datetime.now()
+    if not title:
+        title = f"Meal Plan {now}"
+
+    statement = text("INSERT INTO Meal_Plan " "VALUES (:id, :user, :title, :now)")
+    db.execute(statement, {"id": plan_id, "user": username, "title": title, "now": now})
+
+    for i, day_plan in enumerate(plan, start=1):
+        for recipe in day_plan:
+            statement = text("INSERT INTO Consists_Of " "VALUES (:name, :id, :day)")
+            db.execute(statment, {"name": recipe.name, "id": plan_id, "day": i})
