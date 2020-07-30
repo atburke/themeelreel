@@ -174,7 +174,6 @@ def test_fetch_needed_price_listing(client, db):
     create_recipe(
         db,
         "carrots & onions",
-        "snack",
         [
             {"name": "carrots", "amount": 3, "units": "lb"},
             {"name": "onions", "amount": 27, "units": "g"},
@@ -193,7 +192,6 @@ def test_fetch_needed_price_listing_none_empty(client, db):
     create_recipe(
         db,
         "carrots & onions",
-        "snack",
         [
             {"name": "carrots", "amount": 3, "units": "lb"},
             {"name": "onions", "amount": 27, "units": "g"},
@@ -227,7 +225,6 @@ def test_search_ingredients(client, db, kw, matches):
     create_recipe(
         db,
         "kitchen sink",
-        "breakfast",
         [{"name": item, "amount": 1, "units": "count"} for item in ALL_ITEMS],
     )
     create_user(db, "u", "p")
@@ -256,7 +253,6 @@ def test_search_units(client, db, kw, matches):
     create_recipe(
         db,
         "kitchen sink",
-        "breakfast",
         [{"name": item, "amount": 1, "units": item} for item in ALL_ITEMS],
     )
     create_user(db, "u", "p")

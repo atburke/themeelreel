@@ -1,5 +1,6 @@
 import hypothesis.strategies as st
 from hypothesis import given
+from . import ureg, Q_
 
 from app.conftest import *
 from app.sql import clear_tables
@@ -10,11 +11,21 @@ from collections import namedtuple
 MockRecipe = namedtuple("MockRecipe", ["calories"])
 
 
-def check_plan(db, meals, budget, cals):
+def check_plan(db, meals, budget, cals, min_ingredients=None, max_ingredients=None):
     assert sum(m.cost for m in meals) <= budget
     assert sum(m.calories for m in meals) >= cals
+    if min_ingredients or max_ingredients:
+        ingredient_map = fetch_ingredients_for_recipes(db)
+        if min_ingredients:
+            for ing, amount in min_ingredients.items():
+                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) >= amount
+
+        if max_ingredients:
+            for ing, amount in max_ingredients.items():
+                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) <= amount
 
 
+@pytest.mark.repeat(10)
 def test_generate_mealplan_no_constraints(db):
     clear_tables(db)
     common_ingredients = [
@@ -46,12 +57,10 @@ def test_generate_mealplan_no_constraints(db):
     budget = 15 * days
     cals = 2000 * days
     meals = find_meals(db, budget, cals)
-    print(meals)
     check_plan(db, meals, budget, cals)
 
 
 def test_generate_mealplan_not_possible(db):
-    clear_tables(db)
     clear_tables(db)
     common_ingredients = [
         {"name": "carrots", "units": "g", "amount": 20},
@@ -74,12 +83,137 @@ def test_generate_mealplan_not_possible(db):
         meals = find_meals(db, budget, cals)
 
 
+@pytest.mark.repeat(10)
 def test_generate_mealplan_minimum_amounts(db):
-    pass
+    clear_tables(db)
+    min_ingredients = {"carrots": Q_(20, "g")}
+
+    create_recipe(
+        db,
+        "A",
+        [
+            {"name": "carrots", "units": "g", "amount": 10},
+            {"name": "apples", "units": "bushels", "amount": 0.1},
+        ],
+        3.00,
+        500,
+    )
+    create_recipe(
+        db, "B", [{"name": "apples", "units": "bushels", "amount": 0.2}], 5.00, 1000
+    )
+    create_recipe(db, "C", [{"name": "cucumbers", "units": "lb", "amount": 0.5}])
+
+    days = 5
+    budget = 10 * days
+    cals = 1000 * days
+    meals = find_meals(db, budget, cals)
+    check_plan(db, meals, budget, cals, min_ingredients=min_ingredients)
 
 
+@pytest.mark.repeat(10)
 def test_generate_mealplan_maximum_amounts(db):
-    pass
+    clear_tables(db)
+    max_ingredients = {"carrots": Q_(25, "g")}
+
+    create_recipe(
+        db,
+        "A",
+        [
+            {"name": "carrots", "units": "g", "amount": 10},
+            {"name": "apples", "units": "bushels", "amount": 0.1},
+        ],
+        3.00,
+        500,
+    )
+    create_recipe(
+        db, "B", [{"name": "apples", "units": "bushels", "amount": 0.2}], 5.00, 1000
+    )
+    create_recipe(db, "C", [{"name": "cucumbers", "units": "lb", "amount": 0.5}])
+
+    days = 5
+    budget = 10 * days
+    cals = 1000 * days
+    meals = find_meals(db, budget, cals, max_ingredients=max_ingredients)
+    print(meals)
+    check_plan(db, meals, budget, cals, max_ingredients=max_ingredients)
+
+
+def test_gen_mealplan_minmax_same_item(db):
+    clear_tables(db)
+    min_ingredients = {"carrots": Q_(20, "g")}
+    max_ingredients = {"carrots": Q_(50, "g")}
+
+    create_recipe(
+        db,
+        "A",
+        [
+            {"name": "carrots", "units": "g", "amount": 10},
+            {"name": "apples", "units": "bushels", "amount": 0.1},
+        ],
+        3.00,
+        500,
+    )
+    create_recipe(
+        db, "B", [{"name": "apples", "units": "bushels", "amount": 0.2}], 5.00, 1000
+    )
+    create_recipe(db, "C", [{"name": "cucumbers", "units": "lb", "amount": 0.5}])
+
+    days = 5
+    budget = 10 * days
+    cals = 1000 * days
+    meals = find_meals(db, budget, cals, min_ingredients, max_ingredients)
+    check_plan(db, meals, budget, cals, min_ingredients, max_ingredients)
+
+
+def test_gen_mealplan_cant_reach_min(db):
+    clear_tables(db)
+    min_ingredients = {"carrots": Q_(200, "g")}
+
+    create_recipe(
+        db,
+        "A",
+        [
+            {"name": "carrots", "units": "g", "amount": 1},
+            {"name": "apples", "units": "bushels", "amount": 0.1},
+        ],
+        3.00,
+        500,
+    )
+    create_recipe(
+        db, "B", [{"name": "apples", "units": "bushels", "amount": 0.2}], 5.00, 1000
+    )
+    create_recipe(db, "C", [{"name": "cucumbers", "units": "lb", "amount": 0.5}])
+
+    days = 5
+    budget = 10 * days
+    cals = 1000 * days
+    with pytest.raises(RuntimeError):
+        find_meals(db, budget, cals, min_ingredients)
+
+
+def test_gen_mealplan_over_max(db):
+    clear_tables(db)
+    max_ingredients = {"carrots": Q_(10, "g")}
+
+    create_recipe(
+        db,
+        "A",
+        [
+            {"name": "carrots", "units": "g", "amount": 100},
+            {"name": "apples", "units": "bushels", "amount": 0.1},
+        ],
+        3.00,
+        500,
+    )
+    create_recipe(
+        db, "B", [{"name": "apples", "units": "bushels", "amount": 0.2}], 5.00, 1
+    )
+
+    days = 5
+    budget = 10 * days
+    cals = 1000 * days
+    with pytest.raises(RuntimeError):
+        find_meals(db, budget, cals, max_ingredients=max_ingredients)
 
 
 def test_distribute_meals_easy():

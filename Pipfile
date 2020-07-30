@@ -16,6 +16,7 @@ flask-sqlalchemy = "*"
 recipe-scrapers = "*"
 pymysql = "*"
 pint = "*"
+attrs = "*"
 
 [requires]
 python_version = "3.7"

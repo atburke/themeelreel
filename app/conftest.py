@@ -46,9 +46,7 @@ def create_price_listing(db, name, source, price, units):
     return now
 
 
-def create_recipe(
-    db, name, type="Dinner", ingredients=None, price=1.0, servings=1, calories=500
-):
+def create_recipe(db, name, ingredients=None, price=1.0, servings=1, calories=500):
     if not ingredients:
         ingredients = []
 
@@ -59,7 +57,7 @@ def create_recipe(
         statement,
         {
             "name": name,
-            "type": type,
+            "type": "Dinner",
             "price": price,
             "servings": servings,
             "calories": calories,

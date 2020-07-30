@@ -6,8 +6,11 @@ import hashlib
 from pathlib import Path
 import time
 import datetime
+import itertools
+from collections import defaultdict
 
 from app.util import hash_password
+from . import ureg, Q_
 
 TS_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
@@ -60,13 +63,10 @@ def password_check(connection, username, password):
     fetch_pws = text("SELECT Password_Hash, Salt FROM User WHERE Username=:username")
     result = connection.execute(fetch_pws, {"username": username}).fetchall()
     if not result:
-        print(f"User {username} not found")
         return False
 
     pwh, salt = result[0]
-    print(f"hash={pwh}, type={type(pwh)}")
     digest = hash_password(password, salt)
-    print(f"digest={digest}, type={type(digest)}")
     return digest == pwh
 
 
@@ -220,13 +220,63 @@ def get_units(db, kw):
     return [r.Recipe_Units for r in result]
 
 
-def fetch_recipes(db):
+def fetch_recipes(db, excludes=None):
+    excludes = excludes or []
+    constraint_str = (
+        "WHERE name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
+        if excludes
+        else ""
+    )
+
     statement = text(
         "SELECT Recipe_Name AS name, Recipe_Cost AS cost, Calories AS calories, Recipe_Cost / Calories AS costPerCalorie "
-        "FROM Recipe NATURAL JOIN Requires "
-        "ORDER BY costPerCalorie"
+        + "FROM Recipe "
+        + constraint_str
+        + "ORDER BY costPerCalorie"
     )
-    return db.execute(statement).fetchall()
+    return db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+
+
+def fetch_ingredients_for_recipes(db, includes=None, excludes=None):
+    constraints = []
+    includes = includes or []
+    excludes = excludes or []
+    if excludes:
+        if len(excludes) > 1:
+            constraints.append("ingredientName NOT IN :excludes")
+        else:
+            constraints.append("ingredientName <> :firstExcludes")
+
+    if includes:
+        if len(includes) > 1:
+            constraints.append("ingredientName IN :includes")
+        else:
+            constraints.append("ingredientName = :firstIncludes")
+
+    constraint_str = f"WHERE {' AND '.join(constraints)} " if constraints else ""
+
+    statement = text(
+        "SELECT Req.Recipe_Name AS name, Req.Ingredient_Name AS ingredientName, Req.Required_Amount AS amount, Req.Item_Units as units "
+        + "FROM Recipe Rec JOIN Requires Req ON Rec.Recipe_Name = Req.Recipe_Name "
+        + constraint_str
+        + "ORDER BY name"
+    )
+    results = db.execute(
+        statement,
+        {
+            "includeAll": not includes,
+            "includes": tuple(includes),
+            "excludes": tuple(excludes),
+            "firstIncludes": includes[0] if includes else None,
+            "firstExcludes": excludes[0] if excludes else None,
+        },
+    )
+    ingredient_map = defaultdict(dict)
+    for recipe_name, ingredients in itertools.groupby(results, key=lambda x: x.name):
+        for ing in ingredients:
+            ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, ing.units)
+
+    return ingredient_map
 
 
 def fetch_recipe_by_name(db, name):
