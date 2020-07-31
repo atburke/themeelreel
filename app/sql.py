@@ -307,6 +307,57 @@ def add_meal_plan_for_user(db, username, plan, title=None):
     db.execute(statement, {"id": plan_id, "user": username, "title": title, "now": now})
 
     for i, day_plan in enumerate(plan, start=1):
-        for recipe in day_plan:
-            statement = text("INSERT INTO Consists_Of " "VALUES (:name, :id, :day)")
-            db.execute(statment, {"name": recipe.name, "id": plan_id, "day": i})
+        for j, recipe in enumerate(day_plan, start=1):
+            statement = text(
+                "INSERT INTO Consists_Of " "VALUES (:name, :id, :day, :order)"
+            )
+            db.execute(
+                statment, {"name": recipe.name, "id": plan_id, "day": i, "order": j}
+            )
+
+
+def fetch_meal_plans_for_user(db, username):
+    statement = text(
+        "SELECT Meal_Plan_ID AS id, Meal_Plan_Title AS title, Time_Created AS timeCreated "
+        "FROM Meal_Plan "
+        "WHERE Username = :user "
+        "ORDER BY timeCreated DESC"
+    )
+    plans = db.execute(statement, {"user": username}).fetchall()
+    results = []
+    for plan in plans:
+        new_plan = {"id": plan.id, "name": plan.title, "timeCreated": plan.timeCreated}
+        statement = text(
+            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, Order AS order "
+            "FROM Recipe R JOIN Consists_Of C ON R.Recipe_Name = C.Recipe_Name "
+            "WHERE Meal_Plan_ID = :id "
+            "ORDER BY day, order"
+        )
+        recipes = db.execute(statement, {"id": plan.id}).fetchall()
+        new_plan["recipes"] = [[] for _ in range(max(r.day for r in recipes))]
+        for recipe in recipes:
+            recipe_listing = {
+                "name": recipe.name,
+                "imageURL": recipe.imageURL,
+                "recipeURL": recipe.recipeURL,
+                "cost": recipe.cost,
+                "calories": recipe.calories,
+            }
+            new_plan["recipes"][recipe.day - 1].append(recipe_listing)
+
+        new_plan["totalCost"] = sum(
+            r.cost for r in itertools.chain.from_iterable(new_plan["recipes"])
+        )
+        new_plan["totalCalories"] = sum(
+            r.calories for r in itertools.chain.from_iterable(new_plan["recipes"])
+        )
+        results.append(new_plan)
+
+    return results
+
+
+def delete_meal_plan(db, id, username):
+    statement = text(
+        "DELETE FROM Meal_Plan " "WHERE Meal_Plan_ID = :id AND Username = :user"
+    )
+    db.execute(statement, {"id": id, "user": username})

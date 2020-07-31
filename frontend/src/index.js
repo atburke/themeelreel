@@ -17,7 +17,8 @@ function App() {
         <Switch>
           <Route exact path="/login" component={LoginPage} />
           <Route exact path="/newaccount" component={CreateAccountPage} />
-          <Route exact path="/" component={PlanMealPage} />
+          <Route exact path="/newplan" component={PlanMealPage} />
+          <Route exact path="/" component={HomePage} />
           <Route exact path="/listings" component={PriceListingPage} />
           <Route exact path="/adminlistings" component={PriceListingAdminPage} />
         </Switch>
@@ -39,6 +40,11 @@ class AppHeader extends React.Component {
     };
   }
 
+  toHome(e) {
+    e.preventDefault();
+    this.followLink("/");
+  }
+
   toListings(e) {
     e.preventDefault();
     this.followLink("/listings");
@@ -46,7 +52,7 @@ class AppHeader extends React.Component {
 
   toMealPlanner(e) {
     e.preventDefault();
-    this.followLink("/");
+    this.followLink("/newplan");
   }
 
   toAdminListings(e) {
@@ -72,7 +78,8 @@ class AppHeader extends React.Component {
     return (
       <nav>
         <ul>
-          <li><a href="/" onClick={this.toMealPlanner}>Meal Planner</a></li>
+          <li><a href="/" onClick={this.toHome}>Home</a></li>
+          <li><a href="/newplan" onClick={this.toMealPlanner}>New Meal Plan</a></li>
           <li><a href="/listings" onClick={this.toListings}>Listings</a></li>
           <li><a href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a></li>
         </ul>
@@ -240,6 +247,121 @@ class CreateAccountPage extends React.Component {
           <input type="submit" value="Create account" />
         </form>
       {smallErrorMessage}
+      </div>
+    );
+  }
+}
+
+function Meal(props) {
+  return (
+    <div>
+      <div>
+        <div><a href={props.recipeURL}>{props.name}</a></div>
+        <div>{props.calories} calories</div>
+        <div>${props.cost}</div>
+      </div>
+      <div><img src={props.imageURL} alt={props.name}/></div>
+    </div>
+  );
+}
+
+function DayPlan(props) {
+  return (
+    <ul>
+      {props.meals.map((meal, index) => (
+        <li key={index}><Meal name={meal.name} imageURL={meal.imageURL} recipeURL={meal.recipeURL} cost={meal.cost} calories={meal.calories}/></li>
+      ))}
+    </ul>
+  );
+}
+
+function MealPlan(props) {
+  return (
+    <div>
+      <div>
+        <div>{props.name}</div>
+        <div>{props.timeCreated}</div>
+        <div>Cost: ${props.totalCost}</div>
+        <div>Total Calories: {props.totalCalories} ({props.totalCalories / props.recipes.length} calories per day)</div>
+      </div>
+      <div>
+        {props.recipes.map((dayPlan, index) => (
+          <div key={index}>
+            <DayPlan meals={dayPlan}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+class HomePage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      token: '',
+      redirect: '',
+      error: '',
+      mealPlans: []
+    };
+
+    if (this.props.location.state && this.props.location.state.token) {
+      this.state.token = this.props.location.state.token;
+    } else {
+      this.state.redirect = '/login';
+    }
+
+    this.fetchMealPlans();
+  }
+
+  fetchMealPlans() {
+    axios({
+      method: 'get',
+      url: '/api/mealplan',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      this.setState({mealPlans: response.data.results});
+    }).catch(error => {
+      this.setState({error: error.data.error});
+    });
+  }
+
+  deleteMealPlan(id) {
+    axios({
+      method: 'delete',
+      url: '/api/mealplan',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      },
+      data: {
+        id: id
+      }
+    }).then(response => {
+      this.fetchMealPlans();
+    }).catch(error => {
+      this.setState({error: error.data.error});
+    })
+  }
+
+  render() {
+    if (this.state.redirect) {
+      return <Redirect to={{
+        pathname: this.state.redirect,
+        state: {token: this.state.token}
+      }} />;
+    }
+
+    return (
+      <div>
+      <AppHeader token={this.state.token} here={this.props.location.pathname} />
+      {this.state.mealPlans.map(plan => (
+        <div key={plan.id}>
+          <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
+          <button onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
+        </div>
+      ))}
       </div>
     );
   }

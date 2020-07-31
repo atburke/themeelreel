@@ -19,6 +19,8 @@ import os
 import datetime
 
 from app.sql import *
+from app.mealplan import *
+from . import ureg, Q_
 
 
 app = Flask(__name__)
@@ -62,7 +64,9 @@ def requires_token(f):
         g.user = user
         if not user:
             abort(401)
-        return f()
+        result = f()
+        g.pop("user")
+        return result
 
     return wrapper
 
@@ -202,6 +206,7 @@ def delete_price():
 
 
 @app.route("/api/pricelistings", methods=["GET", "POST"])
+@requires_token
 def access_list():
     db = get_db()
     if request.method == "GET":
@@ -231,6 +236,7 @@ def access_list():
 
 
 @app.route("/api/search/ingredient")
+@requires_token
 def search_ingr():
     db = get_db()
     kw = request.args.get("kw")
@@ -241,7 +247,59 @@ def search_ingr():
 
 
 @app.route("/api/search/unit")
+@requires_token
 def search_unit():
     db = get_db()
     kw = request.args.get("kw")
     return (jsonify({"results": get_units(db, kw)}), 200)
+
+
+@app.route("/api/mealplan")
+@requires_token
+def get_meal_plans():
+    db = get_db()
+    return jsonify({"results": fetch_meal_plans_for_user(db, g.user)})
+
+
+@app.route("/api/mealplan", methods=["POST"])
+@requires_token
+def generate_meal_plan():
+    db = get_db()
+    data = request.get_json()
+    budget = data["budget"]
+    total_calories = data["days"] * data["dailyCalories"]
+    min_ingredients = {
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["min_ingredients"]
+    }
+    max_ingredients = {
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["max_ingredients"]
+    }
+    meals = None
+    while True:
+        try:
+            meals = find_meals(
+                db, budget, total_calories, min_ingredients, max_ingredients
+            )
+        except (ValueError, RuntimeError):
+            return (jsonify({"error": "Cannot satisfy constraints"}), 400)
+
+        try:
+            check_plan(
+                db, meals, budget, total_calories, min_ingredients, max_ingredients
+            )
+            break
+        except AssertionError:
+            pass
+
+    meal_plan = distribute_meals(meals, data["days"])
+    add_meal_plan_for_user(db, g.user, meal_plan, data.get("title"))
+    return (jsonify({}), 200)
+
+
+@app.route("/api/mealplan", methods=["DELETE"])
+@requires_token
+def delete_meal_plan():
+    db = get_db()
+    data = request.get_json()
+    delete_meal_plan(db, data["id"], g.user)
+    return (jsonify({}), 200)

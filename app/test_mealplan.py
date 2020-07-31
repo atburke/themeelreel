@@ -11,20 +11,6 @@ from collections import namedtuple
 MockRecipe = namedtuple("MockRecipe", ["calories"])
 
 
-def check_plan(db, meals, budget, cals, min_ingredients=None, max_ingredients=None):
-    assert sum(m.cost for m in meals) <= budget
-    assert sum(m.calories for m in meals) >= cals
-    if min_ingredients or max_ingredients:
-        ingredient_map = fetch_ingredients_for_recipes(db)
-        if min_ingredients:
-            for ing, amount in min_ingredients.items():
-                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) >= amount
-
-        if max_ingredients:
-            for ing, amount in max_ingredients.items():
-                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) <= amount
-
-
 @pytest.mark.repeat(10)
 def test_generate_mealplan_no_constraints(db):
     clear_tables(db)
