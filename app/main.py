@@ -269,10 +269,10 @@ def generate_meal_plan():
     budget = data["budget"]
     total_calories = data["days"] * data["dailyCalories"]
     min_ingredients = {
-        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["min_ingredients"]
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["minIngredients"]
     }
     max_ingredients = {
-        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["max_ingredients"]
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["maxIngredients"]
     }
     meals = None
     while True:

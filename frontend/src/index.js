@@ -373,7 +373,19 @@ class PlanMealPage extends React.Component {
     super(props);
     this.state = {
       token: '',
-      redirect: ''
+      redirect: '',
+      error: '',
+      msg: '',
+      budget: 0,
+      dailyCalories: 0,
+      title: '',
+      minIngredients: [],
+      maxIngredients: [],
+      newIngredient: '',
+      newAmount: 0,
+      newUnits: '',
+      ingredientSearchResults: [],
+      unitSearchResults: []
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -381,6 +393,150 @@ class PlanMealPage extends React.Component {
     } else {
       this.state.redirect = '/login';
     }
+
+    this.submitPlan = this.submitPlan.bind(this);
+    this.setTitle = this.setTitle.bind(this);
+    this.setBudget = this.setBudget.bind(this);
+    this.setCalories = this.setCalories.bind(this);
+    this.setDays = this.setDays.bind(this);
+    this.updateIngredientSearch = this.updateIngredientSearch.bind(this);
+    this.updateUnitSearch = this.updateUnitSearch.bind(this);
+    this.addMinIngredient = this.addMinIngredient.bind(this);
+    this.deleteMinIngredient = this.deleteMinIngredient.bind(this);
+    this.addMaxIngredient = this.addMaxIngredient.bind(this);
+    this.deleteMaxIngredient = this.deleteMaxIngredient.bind(this);
+    this.setIngredient = this.setIngredient.bind(this);
+    this.setUnits = this.setUnits.bind(this);
+    this.setAmount = this.setAmount.bind(this);
+  }
+
+  setTitle(e) {
+    this.setState({title: e.target.value});
+  }
+
+  setBudget(e) {
+    this.setState({budget: e.target.value});
+  }
+
+  setCalories(e) {
+    this.setState({calories: e.target.value});
+  }
+
+  setDays(e) {
+    this.setState({days: e.target.value});
+  }
+
+  setIngredient(ingredientName) {
+    this.setState({newIngredient: ingredientName, ingredientSearchResults: []});
+  }
+
+  setUnits(units) {
+    this.setState({newUnits: units, unitSearchResults: []});
+  }
+
+  setAmount(e) {
+    this.setState({newAmount: e.target.value});
+  }
+
+  updateIngredientSearch(e) {
+    let kw = e.target.value;
+    axios({
+      method: 'get',
+      url: '/api/search/ingredient',
+      params: {
+        kw: kw
+      },
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      this.setState({ingredientSearchResults: response.data.results});
+    });
+  }
+
+  updateUnitSearch(e) {
+    let kw = e.target.value;
+    axios({
+      method: 'get',
+      url: '/api/search/unit',
+      params: {
+        kw: kw
+      },
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      this.setState({unitSearchResults: response.data.results});
+    });
+  }
+
+  addMinIngredient() {
+    if (!this.state.minIngredients.some(e => e.name === this.state.newIngredient)) {
+      this.setState((state, props) => {
+        state.minIngredients.push({
+          name: state.newIngredient,
+          amount: state.newAmount,
+          units: state.newUnits
+        });
+        return {minIngredients: state.minIngredients};
+      });
+    }
+  }
+
+  deleteMinIngredient(ingredientName) {
+    console.log(`deleting ${ingredientName} from min`);
+    console.log(this.state.minIngredients);
+    this.setState((state, props) => {
+      let newMin = state.minIngredients.filter(i => i.name !== ingredientName);
+      return {minIngredients: newMin};
+    });
+  }
+
+  addMaxIngredient() {
+    if (!this.state.minIngredients.some(e => e.name === this.state.newIngredient)) {
+      this.setState((state, props) => {
+        state.maxIngredients.push({
+          name: state.newIngredient,
+          amount: state.newAmount,
+          units: state.newUnits
+        });
+        return {maxIngredients: state.maxIngredients};
+      });
+    }
+  }
+
+  deleteMaxIngredient(ingredientName) {
+    console.log(`deleting ${ingredientName} from max`);
+    console.log(this.state.maxIngredients);
+    this.setState((state, props) => {
+      let newMax = state.maxIngredients.filter(i => i.name !== ingredientName);
+      return {maxIngredients: newMax};
+    });
+  }
+
+  submitPlan(e) {
+    e.preventDefault();
+    let message = {
+      budget: this.state.budget,
+      dailyCalories: this.state.dailyCalories,
+      days: this.state.days,
+      title: this.state.title,
+      minIngredients: this.state.minIngredients,
+      maxIngredients: this.state.maxIngredients
+    };
+
+    axios({
+      method: 'post',
+      url: '/api/mealplan',
+      headers: {
+        'Authorization': `Basic ${this.state.token}`
+      },
+      data: message
+    }).then(response => {
+      this.setState({msg: response.data.msg});
+    }).catch(error => {
+      this.setState({error: error.data.error});
+    });
   }
 
   render() {
@@ -392,10 +548,61 @@ class PlanMealPage extends React.Component {
       }} />;
     }
 
+    let mins = this.state.minIngredients.map(ing => (
+      <div key={ing.name}>
+        <span>{ing.name}: {ing.amount} {ing.units}</span>
+        <button onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
+      </div>
+    ));
+
+    let maxs = this.state.maxIngredients.map(ing => (
+      <div key={ing.name}>
+        <span>{ing.name}: {ing.amount} {ing.units}</span>
+        <button onClick={() => this.deleteMaxIngredient(ing.name)}>X</button>
+      </div>
+    ));
+
     return (
       <div>
         <AppHeader token={this.state.token} here={this.props.location.pathname} />
-        <p>NOTHING TO SEE HERE</p>
+        <div>
+          <label htmlFor="title">Title (optional)</label>
+          <input id="title" type="text" value={this.state.title} onChange={this.setTitle} />
+          <label htmlFor="budget">Budget</label>
+          $<input id="budget" type="number" min="0" step="0.01" value={this.state.budget} onChange={this.setBudget} />
+          <label htmlFor="calories">Daily Calories</label>
+          <input id="calories" type="number" min="0" value={this.state.calories} onChange={this.setCalories} />
+          <label htmlFor="days">Days</label>
+          <input id="days" type="number" min="1" max="31" value={this.state.days} onChange={this.setDays} />
+          <hr />
+          <p>Minimum Ingredients</p>
+          {mins}
+          <p>Maximum Ingredients</p>
+          {maxs}
+          <hr />
+          <label htmlFor="search-ingr">Ingredient</label>
+          <input id="search-ingr" type="text" onChange={this.updateIngredientSearch} />
+          <ul>
+            {this.state.ingredientSearchResults.map(name => (
+              <li key={name}><button onClick={() => this.setIngredient(name)}>{name}</button></li>
+            ))}
+          </ul>
+          <label htmlFor="search-unit">Unit</label>
+          <input id="search-unit" type="text" onChange={this.updateUnitSearch} />
+          <ul>
+            {this.state.unitSearchResults.map(name => (
+              <li key={name}><button onClick={() => this.setUnits(name)}>{name}</button></li>
+            ))}
+          </ul>
+          <hr />
+          <p>{this.state.newIngredient}</p>
+          <label htmlFor="amount">Amount:</label>
+          <input id="amount" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
+          <p>{this.state.newUnits}</p>
+          <button onClick={this.addMinIngredient}>Add as minimum</button>
+          <button onClick={this.addMaxIngredient}>Add as maximum</button>
+          <button onClick={this.submitPlan}>Create Plan</button>
+        </div>
       </div>
     );
   }
