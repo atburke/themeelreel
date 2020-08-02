@@ -1,6 +1,7 @@
 from app.sql import *
 from . import ureg
 from app.util import online_stats
+from app.btree import BPlusTree
 
 from itertools import accumulate
 import math
@@ -68,10 +69,15 @@ def find_meals(
 
     means, variances = online_stats([r.costPerCalorie for r in recipes])
     price_cutoffs = [mean + 2 * math.sqrt(var) for mean, var in zip(means, variances)]
+    print(price_cutoffs)
+    price_tree = BPlusTree(1000)
+    for i, cutoff in enumerate(price_cutoffs):
+        price_tree.insert(cutoff, i)
 
     @lru_cache(maxsize=8)
     def max_search_index(price):
-        return bisect(price_cutoffs, price)
+        return price_tree.find(price)
+        #return bisect(price_cutoffs, price)
 
     meal_selections = []
     max_iterations = 1_000
