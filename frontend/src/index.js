@@ -76,13 +76,11 @@ class AppHeader extends React.Component {
     }
 
     return (
-      <nav>
-        <ul>
-          <li><a href="/" onClick={this.toHome}>Home</a></li>
-          <li><a href="/newplan" onClick={this.toMealPlanner}>New Meal Plan</a></li>
-          <li><a href="/listings" onClick={this.toListings}>Listings</a></li>
-          <li><a href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a></li>
-        </ul>
+      <nav class="nav nav-pills">
+        <a class="nav-link {this.props.here === '/' ? active : ''}" href="/" onClick={this.toHome}>Home</a>
+        <a class="nav-link {this.props.here === '/newplan' ? active : ''}" href="/newplan" onClick={this.toMealPlanner}>New Meal Plan</a>
+        <a class="nav-link {this.props.here === '/listings' ? active : ''}" href="/listings" onClick={this.toListings}>Listings</a>
+        <a class="nav-link {this.props.here === '/adminlistings' ? active : ''}" href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a>
       </nav>
     )
   }
@@ -359,7 +357,7 @@ class HomePage extends React.Component {
       {this.state.mealPlans.map(plan => (
         <div key={plan.id}>
           <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
-          <button onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
+          <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
         </div>
       ))}
       </div>
@@ -551,14 +549,14 @@ class PlanMealPage extends React.Component {
     let mins = this.state.minIngredients.map(ing => (
       <div key={ing.name}>
         <span>{ing.name}: {ing.amount} {ing.units}</span>
-        <button onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
+        <button class="btn btn-danger" onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
       </div>
     ));
 
     let maxs = this.state.maxIngredients.map(ing => (
       <div key={ing.name}>
         <span>{ing.name}: {ing.amount} {ing.units}</span>
-        <button onClick={() => this.deleteMaxIngredient(ing.name)}>X</button>
+        <button class="btn btn-danger" onClick={() => this.deleteMaxIngredient(ing.name)}>X</button>
       </div>
     ));
 
@@ -584,14 +582,14 @@ class PlanMealPage extends React.Component {
           <input id="search-ingr" type="text" onChange={this.updateIngredientSearch} />
           <ul>
             {this.state.ingredientSearchResults.map(name => (
-              <li key={name}><button onClick={() => this.setIngredient(name)}>{name}</button></li>
+              <li key={name}><button class="btn btn-secondary" onClick={() => this.setIngredient(name)}>{name}</button></li>
             ))}
           </ul>
           <label htmlFor="search-unit">Unit</label>
           <input id="search-unit" type="text" onChange={this.updateUnitSearch} />
           <ul>
             {this.state.unitSearchResults.map(name => (
-              <li key={name}><button onClick={() => this.setUnits(name)}>{name}</button></li>
+              <li key={name}><button class="btn btn-secondary" onClick={() => this.setUnits(name)}>{name}</button></li>
             ))}
           </ul>
           <hr />
@@ -599,9 +597,9 @@ class PlanMealPage extends React.Component {
           <label htmlFor="amount">Amount:</label>
           <input id="amount" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
           <p>{this.state.newUnits}</p>
-          <button onClick={this.addMinIngredient}>Add as minimum</button>
-          <button onClick={this.addMaxIngredient}>Add as maximum</button>
-          <button onClick={this.submitPlan}>Create Plan</button>
+          <button class="btn btn-light" onClick={this.addMinIngredient}>Add as minimum</button>
+          <button class="btn btn-dark" onClick={this.addMaxIngredient}>Add as maximum</button>
+          <button class="btn btn-primary" onClick={this.submitPlan}>Create Plan</button>
         </div>
       </div>
     );
@@ -808,7 +806,7 @@ class PriceListingPage extends React.Component {
       ingredientOptions = (
         <ul>
           {this.state.ingredientSuggestions.map(name => (
-            <li><button onClick={() => this.selectIngredient(name)}>{name}</button></li>
+            <li><button class="btn btn-secondary" onClick={() => this.selectIngredient(name)}>{name}</button></li>
           ))}
         </ul>
       );
@@ -821,7 +819,7 @@ class PriceListingPage extends React.Component {
       unitOptions = (
         <ul>
         {this.state.unitSuggestions.map(unit => (
-          <li><button onClick={() => this.selectUnits(unit)}>{unit}</button></li>
+          <li><button class="btn btn-secondary" onClick={() => this.selectUnits(unit)}>{unit}</button></li>
         ))}
         </ul>
       );
@@ -857,7 +855,7 @@ class PriceListingPage extends React.Component {
         <label htmlFor="searchIngredient">Search for an ingredient to add a price listing for:</label>
         <input id="searchIngredient" value={this.ingredientSearchTerm} onChange={this.searchIngredient}/>
         {ingredientOptions}
-        <button onClick={this.fetchNeededPriceListing}>Choose for me</button>
+        <button class="btn btn-info" onClick={this.fetchNeededPriceListing}>Choose for me</button>
         <label htmlFor="searchUnit">Select Units</label>
         <input id="searchUnit" value={this.unitSearchTerm} onChange={this.searchUnit} />
         {unitOptions}
@@ -1000,8 +998,8 @@ class PriceListingAdminPage extends React.Component {
         <td><input type="text" value={listing.units} onChange={e => this.updateListingLocally(listing, listing.price, e.target.value)} /></td>
         <td>{listing.source}</td>
         <td>{listing.timeCreated}</td>
-        <td><button onClick={() => this.updateListing(listing)}>Update</button></td>
-        <td><button onClick={() => this.deleteListing(listing)}>X</button></td>
+        <td><button class="btn btn-success" onClick={() => this.updateListing(listing)}>Update</button></td>
+        <td><button class="btn btn-danger" onClick={() => this.deleteListing(listing)}>X</button></td>
       </tr>
     );
 
