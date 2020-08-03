@@ -232,7 +232,8 @@ def access_list():
             amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
-        return (jsonify({"results": "Item added."}), 200)
+        update_price_average(data["ingredientName"])
+        return (jsonify({'results': 'Item added.'}), 200)
 
 
 # GET /api/search/ingredient?kw=<keyword>
