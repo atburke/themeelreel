@@ -167,7 +167,9 @@ def createaccount():
 @admin_only
 def admin_list():
     db = get_db()
-    return (jsonify({"results": fetch_all_price_listings(db)}), 200)
+    ingredient_kw = request.args.get("ingredient", "")
+    source_kw = request.args.get("source", "")
+    return (jsonify({"results": fetch_all_price_listings(db, ingredient_kw, source_kw)}), 200)
 
 
 # POST /api/adminpricelistings/update
@@ -275,6 +277,14 @@ def generate_meal_plan():
     max_ingredients = {
         ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["maxIngredients"]
     }
+    for quantity in min_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
+    for quantity in max_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
     meals = None
     while True:
         try:

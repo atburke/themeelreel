@@ -877,7 +877,9 @@ class PriceListingAdminPage extends React.Component {
     this.state = {
       priceListings: [],
       token: '',
-      redirect: ''
+      redirect: '',
+      ingredientKeyword: '',
+      sourceKeyword: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -885,6 +887,9 @@ class PriceListingAdminPage extends React.Component {
     } else {
       this.state.redirect = '/login';
     }
+
+    this.setIngredientKeyword = this.setIngredientKeyword.bind(this);
+    this.setSourceKeyword = this.setSourceKeyword.bind(this);
 
     this.fetchListings();
   }
@@ -895,6 +900,10 @@ class PriceListingAdminPage extends React.Component {
       url: '/api/adminpricelistings',
       headers: {
         'Authorization': `Bearer ${this.state.token}`
+      },
+      params: {
+        ingredient: this.state.ingredientKeyword,
+        source: this.state.sourceKeyword
       }
     }).then(response => {
       this.setState({priceListings: response.data.results});
@@ -980,6 +989,14 @@ class PriceListingAdminPage extends React.Component {
 
       return l;
     })});
+  }
+
+  setIngredientKeyword(e) {
+    this.setState({ingredientKeyword: e.target.value});
+  }
+
+  setSourceKeyword(e) {
+    this.setState({sourceKeyword: e.target.value});
   }
 
   render() {

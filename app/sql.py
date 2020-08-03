@@ -101,9 +101,11 @@ def create_user(connection, username, password):
     return True
 
 
-def fetch_all_price_listings(db):
+def fetch_all_price_listings(db, ingredient_kw="", source_kw=""):
     statement = text(
-        "SELECT * FROM Ingredient_Price_Listing ORDER BY Ingredient_Name, Ingredient_Source, Ingredient_Units, Ingredient_Price, Time_Added"
+        "SELECT * FROM Ingredient_Price_Listing "
+        "WHERE Ingredient_Name LIKE :ing AND Ingredient_Source LIKE :source "
+        "ORDER BY Ingredient_Name, Ingredient_Source, Ingredient_Units, Ingredient_Price, Time_Added"
     )
     return [
         {
@@ -112,6 +114,8 @@ def fetch_all_price_listings(db):
             "timeCreated": str(r.Time_Added),
             "units": r.Ingredient_Units,
             "price": r.Ingredient_Price,
+            "ing": f"%{ingredient_kw}%",
+            "source": f"%{source_kw}%"
         }
         for r in db.execute(statement)
     ]
