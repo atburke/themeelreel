@@ -31,9 +31,11 @@ class AppHeader extends React.Component {
   constructor(props) {
     super(props);
 
+    this.toHome = this.toHome.bind(this);
     this.toListings = this.toListings.bind(this);
     this.toMealPlanner = this.toMealPlanner.bind(this);
     this.toAdminListings = this.toAdminListings.bind(this);
+    this.logout = this.logout.bind(this);
 
     this.state = {
       redirect: ''
@@ -60,6 +62,11 @@ class AppHeader extends React.Component {
     this.followLink("/adminlistings")
   }
 
+  logout(e) {
+    e.preventDefault();
+    this.followLink("/login");
+  }
+
   followLink(route) {
     console.log(`redirecting to ${route}`)
     if (route !== this.props.here) {
@@ -76,12 +83,18 @@ class AppHeader extends React.Component {
     }
 
     return (
-      <nav class="nav nav-pills">
-        <a class="nav-link {this.props.here === '/' ? active : ''}" href="/" onClick={this.toHome}>Home</a>
-        <a class="nav-link {this.props.here === '/newplan' ? active : ''}" href="/newplan" onClick={this.toMealPlanner}>New Meal Plan</a>
-        <a class="nav-link {this.props.here === '/listings' ? active : ''}" href="/listings" onClick={this.toListings}>Listings</a>
-        <a class="nav-link {this.props.here === '/adminlistings' ? active : ''}" href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a>
-      </nav>
+      <div>
+        <div class="pb-2 mt-4 mb-2 border-bottom">
+          <h1>The MeelReel</h1>
+        </div>
+        <nav class="nav nav-tabs">
+          <a class="nav-link" href="/" onClick={this.toHome}>Home</a>
+          <a class="nav-link" href="/newplan" onClick={this.toMealPlanner}>New Meal Plan</a>
+          <a class="nav-link" href="/listings" onClick={this.toListings}>Listings</a>
+          <a class="nav-link" href="/adminlistings" onClick={this.toAdminListings}>Admin listings</a>
+          <a class="nav-link" href="/login" onClick={this.logout}>Log out</a>
+        </nav>
+      </div>
     )
   }
 }
@@ -145,11 +158,17 @@ class LoginPage extends React.Component {
       <p>Don't have an account? <Link to="/newaccount">Sign up</Link></p>
       {errorMessage}
         <form onSubmit={this.handleSubmit}>
-          <label htmlFor="username">Username</label>
-          <input type="text" id="username" value={this.state.username} onChange={this.handleUsernameChange} />
-          <label htmlFor="password">Password</label>
-          <input type="password" id="password" value={this.state.password} onChange={this.handlePasswordChange} />
-          <input type="submit" value="Log in" />
+          <div class="form-row">
+            <div class="col-3">
+              <label htmlFor="username">Username</label>
+              <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
+            </div>
+            <div class="col-3">
+              <label htmlFor="password">Password</label>
+              <input type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary col-1">Log in</button>
         </form>
       </div>
     );
@@ -180,12 +199,15 @@ class CreateAccountPage extends React.Component {
   }
 
   handlePassword2Change(event) {
-    this.setState({password2: event.target.value});
-    if (this.state.password1 !== this.state.password2) {
-      this.setState({smallError: 'Passwords must match'});
-    } else {
-      this.setState({smallError: ''});
-    }
+    this.setState((state, props) => {
+      let pw2 = event.target.value;
+      let smallError = state.password1 === pw2 ? 'Passwords must match' : '';
+
+      return {
+        password2: pw2,
+        smallError: smallError
+      };
+    });
   }
 
   handleSubmit(event) {
@@ -236,13 +258,19 @@ class CreateAccountPage extends React.Component {
       <p>Already have an account? <Link to="/login">Log in</Link></p>
       {errorMessage}
         <form onSubmit={this.handleSubmit}>
-          <label htmlFor="username">Username</label>
-          <input type="text" id="username" value={this.state.username} onChange={this.handleUsernameChange} />
-          <label htmlFor="password1">Password</label>
-          <input type="password" id="password1" value={this.state.password1} onChange={this.handlePassword1Change} />
-          <label htmlFor="password2">Retype Password</label>
-          <input type="password" id="password2" value={this.state.password2} onChange={this.handlePassword2Change} />
-          <input type="submit" value="Create account" />
+          <div class="form-group">
+            <label htmlFor="username">Username</label>
+            <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="password1">Password</label>
+            <input type="password" id="password1" class="form-control" value={this.state.password1} onChange={this.handlePassword1Change} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="password2">Retype Password</label>
+            <input type="password" id="password2" value={this.state.password2} onChange={this.handlePassword2Change} />
+          </div>
+          <button type="submit" class="btn btn-primary">Create account</button>
         </form>
       {smallErrorMessage}
       </div>
@@ -252,22 +280,27 @@ class CreateAccountPage extends React.Component {
 
 function Meal(props) {
   return (
-    <div>
-      <div>
-        <div><a href={props.recipeURL}>{props.name}</a></div>
-        <div>{props.calories} calories</div>
-        <div>${props.cost}</div>
+    <div class="card">
+      <img class="card-img-top" src={props.imageURL} alt={props.name}/>
+      <div class="card-body">
+        <h5 class="card-title">{props.name}</h5>
+        <div class="container">
+          <p class="card-text row">
+            <div class="col">Calories: {props.calories}</div>
+            <div class="col">Cost: ${props.cost}</div>
+          </p>
+        </div>
+        <a href={props.recipeURL} class="btn btn-link">View Recipe</a>
       </div>
-      <div><img src={props.imageURL} alt={props.name}/></div>
     </div>
   );
 }
 
 function DayPlan(props) {
   return (
-    <ul>
+    <ul class="list-group">
       {props.meals.map((meal, index) => (
-        <li key={index}><Meal name={meal.name} imageURL={meal.imageURL} recipeURL={meal.recipeURL} cost={meal.cost} calories={meal.calories}/></li>
+        <li key={index} class="list-group-item"><Meal name={meal.name} imageURL={meal.imageURL} recipeURL={meal.recipeURL} cost={meal.cost} calories={meal.calories}/></li>
       ))}
     </ul>
   );
@@ -275,19 +308,24 @@ function DayPlan(props) {
 
 function MealPlan(props) {
   return (
-    <div>
-      <div>
-        <div>{props.name}</div>
-        <div>{props.timeCreated}</div>
-        <div>Cost: ${props.totalCost}</div>
-        <div>Total Calories: {props.totalCalories} ({props.totalCalories / props.recipes.length} calories per day)</div>
-      </div>
-      <div>
-        {props.recipes.map((dayPlan, index) => (
-          <div key={index}>
-            <DayPlan meals={dayPlan}/>
-          </div>
-        ))}
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{props.name}</h5>
+        <div class="container">
+          <p class="card-text row">
+            <div>Created {props.timeCreated}</div>
+            <div>Cost: ${props.totalCost}</div>
+            <div>Total Calories: {props.totalCalories} ({props.totalCalories / props.recipes.length} calories per day)</div>
+          </p>
+        </div>
+        <hr />
+        <div class="d-flex flex-wrap">
+          {props.recipes.map((dayPlan, index) => (
+            <div key={index}>
+              <DayPlan meals={dayPlan}/>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -354,13 +392,17 @@ class HomePage extends React.Component {
     return (
       <div>
       <AppHeader token={this.state.token} here={this.props.location.pathname} />
-      {this.state.mealPlans.map(plan => (
-        <div key={plan.id}>
-          <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
-          <a class="btn btn-link" href="/api/mealplan/{plan.id}.pdf" download>Download</a>
-          <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
-        </div>
-      ))}
+        <h3>Your existing meal plans:</h3>
+        <ul class="list-group list-group-flush">
+        {this.state.mealPlans.map(plan => (
+          <li key={plan.id} class="list-group-item">
+            <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
+            <br />
+            <a class="btn btn-link" href="/api/mealplan/{plan.id}.pdf" download>Download</a>
+            <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
+          </li>
+        ))}
+        </ul>
       </div>
     );
   }
@@ -548,60 +590,84 @@ class PlanMealPage extends React.Component {
     }
 
     let mins = this.state.minIngredients.map(ing => (
-      <div key={ing.name}>
-        <span>{ing.name}: {ing.amount} {ing.units}</span>
-        <button class="btn btn-danger" onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
-      </div>
+      <li key={ing.name} class="list-group-item">
+        <div key={ing.name} class="card">
+          <div class="card-body">
+            <span>{ing.name}: {ing.amount} {ing.units}</span>
+            <button class="btn btn-danger" onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
+          </div>
+        </div>
+      </li>
     ));
 
     let maxs = this.state.maxIngredients.map(ing => (
-      <div key={ing.name}>
-        <span>{ing.name}: {ing.amount} {ing.units}</span>
-        <button class="btn btn-danger" onClick={() => this.deleteMaxIngredient(ing.name)}>X</button>
-      </div>
+      <li key={ing.name} class="list-group-item">
+        <div class="card">
+          <div class="card-body">
+            <p class="card-text">{ing.name}: {ing.amount} {ing.units}</p>
+            <button class="btn btn-danger" onClick={() => this.deleteMaxIngredient(ing.name)}>X</button>
+          </div>
+        </div>
+      </li>
     ));
 
     return (
       <div>
         <AppHeader token={this.state.token} here={this.props.location.pathname} />
-        <div>
-          <label htmlFor="title">Title (optional)</label>
-          <input id="title" type="text" value={this.state.title} onChange={this.setTitle} />
-          <label htmlFor="budget">Budget</label>
-          $<input id="budget" type="number" min="0" step="0.01" value={this.state.budget} onChange={this.setBudget} />
-          <label htmlFor="calories">Daily Calories</label>
-          <input id="calories" type="number" min="0" value={this.state.calories} onChange={this.setCalories} />
-          <label htmlFor="days">Days</label>
-          <input id="days" type="number" min="1" max="31" value={this.state.days} onChange={this.setDays} />
+        <h3>Generate a new meal plan</h3>
+        <form>
+          <div class="form-group">
+            <label htmlFor="title">Title (optional)</label>
+            <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="budget">Budget</label>
+            $<input id="budget" type="number" min="0" step="0.01" class="form-control" value={this.state.budget} onChange={this.setBudget} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="calories">Daily Calories</label>
+            <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="days">Days</label>
+            <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
+          </div>
           <hr />
-          <p>Minimum Ingredients</p>
+          <h4>Minimum Ingredients</h4>
           {mins}
-          <p>Maximum Ingredients</p>
+          <h4>Maximum Ingredients</h4>
           {maxs}
           <hr />
-          <label htmlFor="search-ingr">Ingredient</label>
-          <input id="search-ingr" type="text" onChange={this.updateIngredientSearch} />
-          <ul>
+          <div class="form-group">
+            <label htmlFor="search-ingr">Ingredient</label>
+            <input id="search-ingr" class="form-control" type="text" onChange={this.updateIngredientSearch} />
+          </div>
+          <ul class="list-group list-group-horizontal">
             {this.state.ingredientSearchResults.map(name => (
-              <li key={name}><button class="btn btn-secondary" onClick={() => this.setIngredient(name)}>{name}</button></li>
+              <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.setIngredient(name)}>{name}</button></li>
             ))}
           </ul>
-          <label htmlFor="search-unit">Unit</label>
-          <input id="search-unit" type="text" onChange={this.updateUnitSearch} />
-          <ul>
+          <div class="form-group">
+            <label htmlFor="search-unit">Unit</label>
+            <input id="search-unit" class="list-group-item" type="text" onChange={this.updateUnitSearch} />
+          </div>
+          <ul class="list-group list-group-horizontal">
             {this.state.unitSearchResults.map(name => (
-              <li key={name}><button class="btn btn-secondary" onClick={() => this.setUnits(name)}>{name}</button></li>
+              <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.setUnits(name)}>{name}</button></li>
             ))}
           </ul>
           <hr />
-          <p>{this.state.newIngredient}</p>
-          <label htmlFor="amount">Amount:</label>
-          <input id="amount" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
-          <p>{this.state.newUnits}</p>
-          <button class="btn btn-light" onClick={this.addMinIngredient}>Add as minimum</button>
-          <button class="btn btn-dark" onClick={this.addMaxIngredient}>Add as maximum</button>
+          <div class="form-row">
+            <div class="col">{this.state.newIngredient}: </div>
+            <input id="amount" class="form-control col" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
+            <div class="col">{this.state.newUnits}</div>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-dark" onClick={this.addMinIngredient}>Add as minimum</button>
+            <button class="btn btn-light" onClick={this.addMaxIngredient}>Add as maximum</button>
+          </div>
           <button class="btn btn-primary" onClick={this.submitPlan}>Create Plan</button>
-        </div>
+        </form>
       </div>
     );
   }
@@ -793,9 +859,7 @@ class PriceListingPage extends React.Component {
   }
 
   render() {
-    console.log("rendering price listing page");
     if (this.state.redirect) {
-      console.log("redirecting");
       return <Redirect to={{
         pathname: this.state.redirect,
         state: {token: this.state.token}
@@ -805,64 +869,79 @@ class PriceListingPage extends React.Component {
     let ingredientOptions;
     if (this.state.ingredientSuggestions) {
       ingredientOptions = (
-        <ul>
+        <ul class="list-group list-group-horizontal">
           {this.state.ingredientSuggestions.map(name => (
-            <li><button class="btn btn-secondary" onClick={() => this.selectIngredient(name)}>{name}</button></li>
+            <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.selectIngredient(name)}>{name}</button></li>
           ))}
         </ul>
       );
     } else {
-      this.ingredientOptions = <div></div>;
+      this.ingredientOptions = '';
     }
 
     let unitOptions;
     if (this.state.unitSuggestions) {
       unitOptions = (
-        <ul>
+        <ul class="list-group list-group-horizontal">
         {this.state.unitSuggestions.map(unit => (
-          <li><button class="btn btn-secondary" onClick={() => this.selectUnits(unit)}>{unit}</button></li>
+          <li key={unit} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.selectUnits(unit)}>{unit}</button></li>
         ))}
         </ul>
       );
     } else {
-      unitOptions = <div></div>;
+      unitOptions = '';
     }
 
     let form;
-    console.log(this.state);
     if (this.state.newIngredientName && this.state.newIngredientUnits) {
       form = (
-          <div>
+        <div>
           <form onSubmit={this.addPriceListing}>
-            <p>{this.state.newIngredientName}</p>
-            <label htmlFor="source">Source</label>
-            <input type="text" id="source" value={this.state.newIngredientSource} onChange={this.selectSource} />
-            <label htmlFor="price">Price</label>
-            $<input type="number" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
-            <label htmlFor="amount">Amount</label>
-            <input type="number" id="amount" min="0" step="0.01" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
-            <p>{this.state.newIngredientUnits}</p>
-            <input type="submit" value="Submit" />
+            <h5>{this.state.newIngredientName}</h5>
+            <div class="form-row">
+              <div class="form-group">
+                <label htmlFor="source" class="col-1 col-form-label">Source</label>
+                <input type="text" class="form-control col-3" id="source" value={this.state.newIngredientSource} onChange={this.selectSource} />
+              </div>
+              <div class="form-group">
+                <label htmlFor="price" class="col-1 col-form-label">Price: </label>
+                $<input type="number" class="form-control col-2" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
+              </div>
+              <div class="form-group">
+                <label class="col-1 col-form-label" htmlFor="amount">Amount</label>
+                <input type="number" class="form-control col-2" id="amount" min="0" step="0.01" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
+                <div class="col-1">{this.state.newIngredientUnits}</div>
+            </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
           </form>
         </div>
       );
     } else {
-      form = <div></div>;
+      form = '';
     }
 
     return (
       <div>
-      <AppHeader token={this.state.token} here={this.props.location.pathname} />
-        <label htmlFor="searchIngredient">Search for an ingredient to add a price listing for:</label>
-        <input id="searchIngredient" value={this.ingredientSearchTerm} onChange={this.searchIngredient}/>
-        {ingredientOptions}
-        <button class="btn btn-info" onClick={this.fetchNeededPriceListing}>Choose for me</button>
-        <label htmlFor="searchUnit">Select Units</label>
-        <input id="searchUnit" value={this.unitSearchTerm} onChange={this.searchUnit} />
-        {unitOptions}
+        <AppHeader token={this.state.token} here={this.props.location.pathname} />
+        <div>
+          <div class="form-group">
+            <label htmlFor="searchIngredient">Search for an ingredient to add a price listing for:</label>
+            <input id="searchIngredient" class="form-control" value={this.ingredientSearchTerm} onChange={this.searchIngredient}/>
+            <button class="btn btn-info" onClick={this.fetchNeededPriceListing}>Choose for me</button>
+          </div>
+          {ingredientOptions}
+          <div class="form-group">
+            <label htmlFor="searchUnit">Select Units</label>
+            <input id="searchUnit" class="form-control" value={this.unitSearchTerm} onChange={this.searchUnit} />
+          </div>
+          {unitOptions}
+        </div>
         <br />
-        {this.state.newIngredientName ? <p>{this.state.newIngredientName}</p> : ''}
-        {this.state.newIngredientUnits ? <p>{this.state.newIngredientUnits}</p> : ''}
+        <div class="row">
+          <p class="col">New ingredient: {this.state.newIngredientName ? this.state.newIngredientName : 'None'}</p>
+          <p class="col">New units: {this.state.newIngredientUnits ? this.state.newIngredientUnits : 'None'}</p>
+        </div>
         <hr />
         {form}
         {this.state.error}
@@ -1024,17 +1103,21 @@ class PriceListingAdminPage extends React.Component {
     return (
       <div>
       <AppHeader token={this.state.token} here={this.props.location.pathname} />
-        <table>
-          <tr>
-            <th>Ingredient Name</th>
-            <th>Price</th>
-            <th>Units</th>
-            <th>Source</th>
-            <th>Time Created</th>
-            <th><input type="text" class="form-control" placeholder="Filter ingredients" value={this.state.ingredientKeyword} onChange={this.setIngredientKeyword}/></th>
-            <th><input type="text" class="form-control" placeholder="Filter sources" value={this.state.sourceKeyword} onChange={this.setSourceKeyword}/></th>
-          </tr>
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Ingredient Name</th>
+              <th>Price</th>
+              <th>Units</th>
+              <th>Source</th>
+              <th>Time Created</th>
+              <th><input type="text" class="form-control" placeholder="Filter ingredients" value={this.state.ingredientKeyword} onChange={this.setIngredientKeyword}/></th>
+              <th><input type="text" class="form-control" placeholder="Filter sources" value={this.state.sourceKeyword} onChange={this.setSourceKeyword}/></th>
+            </tr>
+          </thead>
+          <tbody>
           {listings}
+          </tbody>
         </table>
         <p>{this.state.error}</p>
       </div>
