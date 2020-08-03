@@ -10,6 +10,7 @@ from flask import (
     make_response,
     g,
 )
+from flask_weasyprint import HTML, render_pdf
 
 from secrets import token_hex
 import sqlalchemy
@@ -303,3 +304,17 @@ def delete_meal_plan():
     data = request.get_json()
     delete_meal_plan(db, data["id"], g.user)
     return (jsonify({}), 200)
+
+
+@requires_token
+@app.route("/api/mealplan/<id>.pdf")
+def download_meal_plan(id):
+    db = get_db()
+    plans = fetch_meal_plans_for_user(db, g.user)
+    try:
+        plan = next(p for p in plans if p.id == id)
+    except StopIteration:
+        abort(404)
+
+    plan_html = render_template("mealplan.html", plan)
+    return render_pdf(HTML(string=plan_html))

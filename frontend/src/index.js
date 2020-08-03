@@ -357,6 +357,7 @@ class HomePage extends React.Component {
       {this.state.mealPlans.map(plan => (
         <div key={plan.id}>
           <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
+          <a class="btn btn-link" href="/api/mealplan/{plan.id}.pdf" download>Download</a>
           <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
         </div>
       ))}
