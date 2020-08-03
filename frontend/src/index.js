@@ -1031,8 +1031,8 @@ class PriceListingAdminPage extends React.Component {
             <th>Units</th>
             <th>Source</th>
             <th>Time Created</th>
-            <th></th>
-            <th></th>
+            <th><input type="text" class="form-control" placeholder="Filter ingredients" value={this.state.ingredientKeyword} onChange={this.setIngredientKeyword}/></th>
+            <th><input type="text" class="form-control" placeholder="Filter sources" value={this.state.sourceKeyword} onChange={this.setSourceKeyword}/></th>
           </tr>
           {listings}
         </table>
