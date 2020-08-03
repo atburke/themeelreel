@@ -188,6 +188,7 @@ def update_price():
         data.get("price"),
         data.get("units"),
     )
+    update_price_average(db, data["ingredientName"])
     return (jsonify({}), 200)
 
 
@@ -202,6 +203,7 @@ def delete_price():
     delete_price_listing(
         db, data["ingredientName"], data["source"], data["timeCreated"],
     )
+    update_price_average(db, data["ingredientName"])
     return (jsonify({}), 200)
 
 
@@ -232,7 +234,7 @@ def access_list():
             amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
-        update_price_average(data["ingredientName"])
+        update_price_average(db, data["ingredientName"])
         return (jsonify({'results': 'Item added.'}), 200)
 
 
