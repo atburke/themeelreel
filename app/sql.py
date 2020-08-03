@@ -6,7 +6,7 @@ import hashlib
 from pathlib import Path
 import time
 
-from util import hash_password
+from util import hash_password, average_price
 
 
 def create_tables(connection):
@@ -14,6 +14,9 @@ def create_tables(connection):
     with open(sql_dir.joinpath("schema.sql")) as f:
         for statement in f.read().split(";"):
             connection.execute(text(statement))
+    # Create triggers
+    # trigger_update_avg(connection)
+    trigger_update_cost(connection)
 
 
 def clear_tables(connection):
@@ -25,6 +28,54 @@ def clear_tables(connection):
             except OperationalError as e:
                 if "no such table" not in str(e).lower():
                     raise
+
+
+# def trigger_update_avg(connection):
+#     statement = text(
+#         """
+#         CREATE TRIGGER UpdateAvg
+#             AFTER INSERT ON Ingredient_Price_Listing
+#             FOR EACH ROW
+#             BEGIN
+#                 UPDATE Ingredient
+#                 SET Average_Price_Per_Unit=:avg, Recipe_Units=:units
+#                 WHERE Ingredient_Name = NEW.Ingredient_Name;
+#             END;
+#         """
+#         )
+#     update = average_price(
+#         [i for i in db.execute(text(
+#             """
+#             SELECT Ingredient_Price, Ingredient_Units
+#             FROM Ingredient_Price_Listing
+#             """
+#         ))]
+#     )
+#     connection.execute(statement, {'avg':update[0], 'units':update[1]})
+
+
+def trigger_update_cost(connection):
+    connection.execute(text(
+        """
+        CREATE TRIGGER UpdateCost
+            AFTER UPDATE ON Ingredient
+            FOR EACH ROW
+            BEGIN
+                UPDATE Recipe
+                SET Recipe_Cost = (
+                    SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit)
+                    FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name)
+                    WHERE Recipe_Name = Requires.Recipe_Name
+                    GROUP BY Recipe_Name
+                )
+                WHERE Recipe_Name IN (
+                    SELECT Recipe_Name
+                    FROM Requires
+                    WHERE NEW.Ingredient_Name = Requires.Ingredient_Name
+            );
+            END;
+        """
+    ))
 
 
 def check_token(connection, token):
@@ -174,6 +225,27 @@ def update_price_listing(db, name, source, time_created, price=None, units=None)
             "source": source,
             "name": name,
         },
+    )
+
+
+def update_price_average(db, name):
+    update = average_price(
+        [i for i in db.execute(text(
+            """
+            SELECT Ingredient_Price, Ingredient_Units
+            FROM Ingredient_Price_Listing
+            WHERE Ingredient_Name=:name
+            """
+            ), {'name': name}
+        )]
+    )
+    db.execute(text(
+        """
+        UPDATE Ingredient
+        SET Average_Price_Per_Unit=:avg, Recipe_Units=:units
+        WHERE Ingredient_Name=:name;
+        """
+        ), {'avg': update[0], 'units': update[1]}
     )
 
 

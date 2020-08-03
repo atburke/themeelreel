@@ -220,6 +220,7 @@ def access_list():
             price=data.get("price"),
             units=data.get("units"),
         )
+        update_price_average(data["ingredientName"])
         return (jsonify({'results': 'Item added.'}), 200)
 
 
