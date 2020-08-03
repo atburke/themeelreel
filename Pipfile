@@ -4,14 +4,20 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pytest = "*"
+pytest-repeat = "*"
+hypothesis = "*"
 
 [packages]
 flask = "*"
 gunicorn = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
-pytest = "*"
 recipe-scrapers = "*"
+pymysql = "*"
+pint = "*"
+attrs = "*"
+flask-weasyprint = "*"
 
 [requires]
 python_version = "3.7"

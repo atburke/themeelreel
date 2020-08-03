@@ -1,5 +1,5 @@
 DELETE FROM User;
-DELETE FROM Tokens;
+DELETE FROM Token;
 DELETE FROM Meal_Plan;
 DELETE FROM Created_By;
 DELETE FROM Recipe;

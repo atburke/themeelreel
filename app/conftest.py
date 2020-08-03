@@ -1,13 +1,5 @@
-import sys
-from pathlib import Path
-
-app_root = str(Path(__file__).parents[1])
-print(app_root)
-if app_root not in sys.path:
-    sys.path.append(app_root)
-
 import pytest
-from main import app
+from app.main import app
 import sqlalchemy
 
 from sqlalchemy.sql import text
@@ -17,9 +9,9 @@ import hashlib
 from secrets import token_hex
 import datetime
 
-import sql
-from main import *
-from util import *
+import app.sql as sql
+from app.main import *
+from app.util import *
 
 TEST_DATABASE = "sqlite:///test.sqlite"
 
@@ -54,18 +46,40 @@ def create_price_listing(db, name, source, price, units):
     return now
 
 
-def create_recipe(db, name, type, ingredients, servings=1, calories=500):
+def create_recipe(db, name, ingredients=None, price=1.0, servings=1, calories=500):
+    if not ingredients:
+        ingredients = []
+
     statement = text(
-        "INSERT INTO Recipe VALUES (:name, :type, 'example.com', 'example.com', 0, :servings, :calories)"
+        "INSERT INTO Recipe VALUES (:name, :type, 'example.com', 'example.com', :price, :servings, :calories)"
     )
     db.execute(
         statement,
-        {"name": name, "type": type, "servings": servings, "calories": calories},
+        {
+            "name": name,
+            "type": "Dinner",
+            "price": price,
+            "servings": servings,
+            "calories": calories,
+        },
     )
 
     for ing in ingredients:
-        statement = text("INSERT INTO Ingredient VALUES (:name, :units, 0.00)")
-        db.execute(statement, {"name": ing["name"], "units": ing["units"]})
+        if not db.execute(
+            text("SELECT * FROM Requires WHERE Ingredient_Name = :name"),
+            {"name": ing["name"]},
+        ).fetchall():
+            print(f"{ing['name']} doesn't exist")
+            statement = text("INSERT INTO Ingredient VALUES (:name, :units, :price)")
+            db.execute(
+                statement,
+                {
+                    "name": ing["name"],
+                    "units": ing["units"],
+                    "price": ing.get("price", 1.0),
+                },
+            )
+
         statement = text(
             "INSERT INTO Requires VALUES (:name, :recipe_name, :amount, :units)"
         )

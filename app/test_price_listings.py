@@ -1,4 +1,4 @@
-from conftest import *
+from app.conftest import *
 
 from sqlalchemy.sql import text
 import pytest
@@ -48,18 +48,21 @@ def test_update_price_listing(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
             "price": 4.11,
             "units": "L",
         },
     )
     assert r.status_code == 200
 
+    r = db.execute("SELECT * FROM Ingredient_Price_Listing").fetchall()
+    print(r)
+
     statement = text(
         "SELECT * FROM Ingredient_Price_Listing WHERE Ingredient_Name = 'carrot' AND Ingredient_Source = 'Walmart' AND Time_Added = :now"
     )
     result = db.execute(statement, {"now": ts}).fetchall()
-    assert result != []
+    assert len(result) == 1
     data = result[0]
     assert data.Ingredient_Price == 4.11
     assert data.Ingredient_Units == "L"
@@ -75,7 +78,7 @@ def test_update_price_listing_not_admin(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
             "price": 4.11,
             "units": "L",
         },
@@ -93,7 +96,7 @@ def test_delete_price_listing(client, db):
         json={
             "ingredientName": "carrot",
             "source": "Walmart",
-            "timeCreated": ts.timestamp(),
+            "timeCreated": ts.strftime(TS_FORMAT),
         },
     )
     assert r.status_code == 200
@@ -131,7 +134,8 @@ def test_post_price_listing(client, db):
         json={
             "ingredientName": "red onion",
             "source": "Kroger",
-            "price": 99.01,
+            "price": 10.0,
+            "amount": 2,
             "units": "kg",
         },
     )
@@ -143,7 +147,7 @@ def test_post_price_listing(client, db):
     data = results[0]
     assert data.Ingredient_Name == "red onion"
     assert data.Ingredient_Source == "Kroger"
-    assert data.Ingredient_Price == 99.01
+    assert data.Ingredient_Price == 5.0
     assert data.Ingredient_Units == "kg"
     assert datetime.datetime.strptime(data.Time_Added, "%Y-%m-%d %H:%M:%S.%f") >= now
 
@@ -170,7 +174,6 @@ def test_fetch_needed_price_listing(client, db):
     create_recipe(
         db,
         "carrots & onions",
-        "snack",
         [
             {"name": "carrots", "amount": 3, "units": "lb"},
             {"name": "onions", "amount": 27, "units": "g"},
@@ -189,7 +192,6 @@ def test_fetch_needed_price_listing_none_empty(client, db):
     create_recipe(
         db,
         "carrots & onions",
-        "snack",
         [
             {"name": "carrots", "amount": 3, "units": "lb"},
             {"name": "onions", "amount": 27, "units": "g"},
@@ -223,7 +225,6 @@ def test_search_ingredients(client, db, kw, matches):
     create_recipe(
         db,
         "kitchen sink",
-        "breakfast",
         [{"name": item, "amount": 1, "units": "count"} for item in ALL_ITEMS],
     )
     create_user(db, "u", "p")
@@ -252,7 +253,6 @@ def test_search_units(client, db, kw, matches):
     create_recipe(
         db,
         "kitchen sink",
-        "breakfast",
         [{"name": item, "amount": 1, "units": item} for item in ALL_ITEMS],
     )
     create_user(db, "u", "p")

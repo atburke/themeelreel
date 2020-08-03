@@ -10,6 +10,7 @@ from flask import (
     make_response,
     g,
 )
+from flask_weasyprint import HTML, render_pdf
 
 from secrets import token_hex
 import sqlalchemy
@@ -18,11 +19,15 @@ import hashlib
 import os
 import datetime
 
-from sql import *
+from app.sql import *
+from app.mealplan import *
+from . import ureg, Q_
 
 
 app = Flask(__name__)
-app.config["DATABASE_URL"] = os.environ.get("DATABASE_URL")
+app.config["DATABASE_URL"] = os.environ.get(
+    "CLEARDB_DATABASE_URL", "sqlite:///dev.sqlite"
+)
 
 
 @app.teardown_appcontext
@@ -48,7 +53,11 @@ def get_db():
 def requires_token(f):
     @functools.wraps(f)
     def wrapper():
-        token = request.headers["Authorization"].split(" ")[1]
+        try:
+            token = request.headers["Authorization"].split(" ")[1]
+        except IndexError:
+            abort(401)
+
         if not token:
             abort(401)
         db = get_db()
@@ -56,7 +65,9 @@ def requires_token(f):
         g.user = user
         if not user:
             abort(401)
-        return f()
+        result = f()
+        g.pop("user")
+        return result
 
     return wrapper
 
@@ -92,10 +103,7 @@ served_binary_files = frozenset(("logo192.png", "logo512.png",))
 
 @app.route("/<file>")
 def serve_root_file(file):
-    if file in served_files:
-        return render_template(file)
-
-    if file in served_binary_files:
+    if file in served_files or file in served_binary_files:
         return send_file(f"templates/{file}")
 
     abort(404)
@@ -123,7 +131,7 @@ def login():
     if password_check(db, username, password):
         token = token_hex(32)
         add_token_for_user(db, username, token)
-        return (jsonify({'token': token}), 200)
+        return (jsonify({"token": token}), 200)
     else:
         return (jsonify({"error": "Incorrect username and password combination"}), 401)
 
@@ -151,6 +159,7 @@ def createaccount():
     add_token_for_user(db, username, token)
     return (jsonify({"token": token}), 200)
 
+
 # GET /api/adminpricelistings
 
 
@@ -158,7 +167,9 @@ def createaccount():
 @admin_only
 def admin_list():
     db = get_db()
-    return (jsonify({"results": fetch_all_price_listings(db)}), 200)
+    ingredient_kw = request.args.get("ingredient", "")
+    source_kw = request.args.get("source", "")
+    return (jsonify({"results": fetch_all_price_listings(db, ingredient_kw, source_kw)}), 200)
 
 
 # POST /api/adminpricelistings/update
@@ -173,7 +184,7 @@ def update_price():
         db,
         data["ingredientName"],
         data["source"],
-        datetime.datetime.fromtimestamp(data["timeCreated"]),
+        data["timeCreated"],
         data.get("price"),
         data.get("units"),
     )
@@ -189,35 +200,36 @@ def delete_price():
     db = get_db()
     data = request.get_json()
     delete_price_listing(
-        db,
-        data["ingredientName"],
-        data["source"],
-        datetime.datetime.fromtimestamp(data["timeCreated"]),
+        db, data["ingredientName"], data["source"], data["timeCreated"],
     )
     return (jsonify({}), 200)
 
 
 # [GET, POST] /api/pricelistings
 
+
 @app.route("/api/pricelistings", methods=["GET", "POST"])
+@requires_token
 def access_list():
     db = get_db()
-    if request.method == 'GET':
-        return (jsonify({
-                'result':fetch_missing_price_listings(db)['ingredientName']
-            }), 200)
-    elif request.method == 'POST':
+    if request.method == "GET":
+        return (
+            jsonify({"result": fetch_missing_price_listings(db)["ingredientName"]}),
+            200,
+        )
+    elif request.method == "POST":
         data = request.get_json()
         # Check that primary keys are in request
-        if not all(i in data.keys() for i in ['ingredientName', 'source']):
-            return (jsonify({'error':'Bad request'}), 400)
+        if not all(i in data.keys() for i in ["ingredientName", "source"]):
+            return (jsonify({"error": "Bad request"}), 400)
         # Request checks out, ok to execute
         add_price_listing(
             db,
             data["ingredientName"],
             data["source"],
             datetime.datetime.now(),
-            price=data.get("price"),
+            price=float(data["price"]),
+            amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
         update_price_average(data["ingredientName"])
@@ -226,17 +238,94 @@ def access_list():
 
 # GET /api/search/ingredient?kw=<keyword>
 
+
 @app.route("/api/search/ingredient")
+@requires_token
 def search_ingr():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':get_ingredients(db, kw)}), 200)
+    return (jsonify({"results": get_ingredients(db, kw)}), 200)
 
 
 # GET /api/search/unit?kw=<keyword>
 
+
 @app.route("/api/search/unit")
+@requires_token
 def search_unit():
     db = get_db()
     kw = request.args.get("kw")
-    return (jsonify({'results':get_units(db, kw)}), 200)
+    return (jsonify({"results": get_units(db, kw)}), 200)
+
+
+@app.route("/api/mealplan")
+@requires_token
+def get_meal_plans():
+    db = get_db()
+    return jsonify({"results": fetch_meal_plans_for_user(db, g.user)})
+
+
+@app.route("/api/mealplan", methods=["POST"])
+@requires_token
+def generate_meal_plan():
+    db = get_db()
+    data = request.get_json()
+    budget = data["budget"]
+    total_calories = data["days"] * data["dailyCalories"]
+    min_ingredients = {
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["minIngredients"]
+    }
+    max_ingredients = {
+        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["maxIngredients"]
+    }
+    for quantity in min_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
+    for quantity in max_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
+    meals = None
+    while True:
+        try:
+            meals = find_meals(
+                db, budget, total_calories, min_ingredients, max_ingredients
+            )
+        except (ValueError, RuntimeError):
+            return (jsonify({"error": "Cannot satisfy constraints"}), 400)
+
+        try:
+            check_plan(
+                db, meals, budget, total_calories, min_ingredients, max_ingredients
+            )
+            break
+        except AssertionError:
+            pass
+
+    meal_plan = distribute_meals(meals, data["days"])
+    add_meal_plan_for_user(db, g.user, meal_plan, data.get("title"))
+    return (jsonify({}), 200)
+
+
+@app.route("/api/mealplan", methods=["DELETE"])
+@requires_token
+def delete_meal_plan():
+    db = get_db()
+    data = request.get_json()
+    delete_meal_plan(db, data["id"], g.user)
+    return (jsonify({}), 200)
+
+
+@requires_token
+@app.route("/api/mealplan/<id>.pdf")
+def download_meal_plan(id):
+    db = get_db()
+    plans = fetch_meal_plans_for_user(db, g.user)
+    try:
+        plan = next(p for p in plans if p.id == id)
+    except StopIteration:
+        abort(404)
+
+    plan_html = render_template("mealplan.html", plan)
+    return render_pdf(HTML(string=plan_html))
