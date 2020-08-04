@@ -275,8 +275,9 @@ def get_meal_plans():
 def generate_meal_plan():
     db = get_db()
     data = request.get_json()
-    budget = data["budget"]
-    total_calories = data["days"] * data["dailyCalories"]
+    print(data)
+    budget = float(data["budget"])
+    total_calories = int(data["days"]) * int(data["dailyCalories"])
     min_ingredients = {
         ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["minIngredients"]
     }
@@ -308,7 +309,7 @@ def generate_meal_plan():
         except AssertionError:
             pass
 
-    meal_plan = distribute_meals(meals, data["days"])
+    meal_plan = distribute_meals(meals, int(data["days"]))
     add_meal_plan_for_user(db, g.user, meal_plan, data.get("title"))
     return (jsonify({}), 200)
 

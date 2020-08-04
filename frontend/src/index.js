@@ -159,16 +159,16 @@ class LoginPage extends React.Component {
       {errorMessage}
         <form onSubmit={this.handleSubmit}>
           <div class="form-row">
-            <div class="col-3">
+            <div class="col-md-6">
               <label htmlFor="username">Username</label>
               <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
             </div>
-            <div class="col-3">
+            <div class="col-md-6">
               <label htmlFor="password">Password</label>
               <input type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} />
             </div>
           </div>
-          <button type="submit" class="btn btn-primary col-1">Log in</button>
+          <button type="submit" class="btn btn-primary">Log in</button>
         </form>
       </div>
     );
@@ -199,9 +199,9 @@ class CreateAccountPage extends React.Component {
   }
 
   handlePassword2Change(event) {
+    let pw2 = event.target.value;
     this.setState((state, props) => {
-      let pw2 = event.target.value;
-      let smallError = state.password1 === pw2 ? 'Passwords must match' : '';
+      let smallError = state.password1 !== pw2 ? 'Passwords must match' : '';
 
       return {
         password2: pw2,
@@ -268,7 +268,7 @@ class CreateAccountPage extends React.Component {
           </div>
           <div class="form-group">
             <label htmlFor="password2">Retype Password</label>
-            <input type="password" id="password2" value={this.state.password2} onChange={this.handlePassword2Change} />
+            <input type="password" id="password2" class="form-control" value={this.state.password2} onChange={this.handlePassword2Change} />
           </div>
           <button type="submit" class="btn btn-primary">Create account</button>
         </form>
@@ -418,6 +418,7 @@ class PlanMealPage extends React.Component {
       error: '',
       msg: '',
       budget: 0,
+      days: 0,
       dailyCalories: 0,
       title: '',
       minIngredients: [],
@@ -617,21 +618,23 @@ class PlanMealPage extends React.Component {
         <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <h3>Generate a new meal plan</h3>
         <div>
-          <div class="form-group">
-            <label htmlFor="title">Title (optional)</label>
-            <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="budget">Budget</label>
-            $<input id="budget" type="number" min="0" step="0.01" class="form-control" value={this.state.budget} onChange={this.setBudget} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="calories">Daily Calories</label>
-            <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="days">Days</label>
-            <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
+          <div class="row">
+            <div class="form-group col-md-6">
+              <label htmlFor="title">Title (optional)</label>
+              <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="budget">Budget</label>
+              $<input id="budget" type="number" min="0" step="0.01" class="form-control" value={this.state.budget} onChange={this.setBudget} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="calories">Daily Calories</label>
+              <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="days">Days</label>
+              <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
+            </div>
           </div>
           <hr />
           <div class="row">
@@ -669,9 +672,9 @@ class PlanMealPage extends React.Component {
           </ul>
           <hr />
           <div class="form-row">
-            <div class="col">{this.state.newIngredient}: </div>
-            <input id="amount" class="form-control col" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
-            <div class="col">{this.state.newUnits}</div>
+            <div class="col-3">{this.state.newIngredient}: </div>
+            <input id="amount" class="form-control col-8" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
+            <div class="col-1">{this.state.newUnits}</div>
           </div>
           <div class="form-group">
             <button class="btn btn-dark" onClick={this.addMinIngredient}>Add as minimum</button>
