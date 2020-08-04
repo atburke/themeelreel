@@ -762,6 +762,7 @@ class PriceListingPage extends React.Component {
 
   searchUnit(e) {
     let searchTerm = e.target.value;
+
     this.setState({unitSearchTerm: searchTerm}, () => {
       if (!this.searchUnitFn) {
         this.searchUnitFn = _.debounce(() => {
@@ -777,7 +778,7 @@ class PriceListingPage extends React.Component {
               'Authorization': `Bearer ${this.state.token}`
             },
             params: {
-              kw: searchTerm
+              kw: this.state.unitSearchTerm
             }
           }).then(response => {
             console.log(response.data);
