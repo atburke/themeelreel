@@ -46,6 +46,7 @@ def get_db():
     if not hasattr(g, "connection"):
         g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
         g.connection = g.engine.connect()
+        create_tables(g.connection)
     return g.connection
 
 
@@ -166,7 +167,12 @@ def createaccount():
 @admin_only
 def admin_list():
     db = get_db()
-    return (jsonify({"results": fetch_all_price_listings(db)}), 200)
+    ingredient_kw = request.args.get("ingredient", "")
+    source_kw = request.args.get("source", "")
+    return (
+        jsonify({"results": fetch_all_price_listings(db, ingredient_kw, source_kw)}),
+        200,
+    )
 
 
 # POST /api/adminpricelistings/update
@@ -185,6 +191,7 @@ def update_price():
         data.get("price"),
         data.get("units"),
     )
+    update_price_average(db, data["ingredientName"])
     return (jsonify({}), 200)
 
 
@@ -199,6 +206,7 @@ def delete_price():
     delete_price_listing(
         db, data["ingredientName"], data["source"], data["timeCreated"],
     )
+    update_price_average(db, data["ingredientName"])
     return (jsonify({}), 200)
 
 
@@ -229,6 +237,7 @@ def access_list():
             amount=float(data.get("amount", 1)),
             units=data.get("units"),
         )
+        update_price_average(db, data["ingredientName"])
         return (jsonify({"results": "Item added."}), 200)
 
 
@@ -274,6 +283,14 @@ def generate_meal_plan():
     max_ingredients = {
         ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["maxIngredients"]
     }
+    for quantity in min_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
+    for quantity in max_ingredients.values():
+        if quantity.magnitude < 0:
+            abort(400)
+
     meals = None
     while True:
         try:
@@ -303,3 +320,17 @@ def delete_meal_plan():
     data = request.get_json()
     delete_meal_plan(db, data["id"], g.user)
     return (jsonify({}), 200)
+
+
+# @requires_token
+# @app.route("/api/mealplan/<id>.pdf")
+# def download_meal_plan(id):
+#    db = get_db()
+#    plans = fetch_meal_plans_for_user(db, g.user)
+#    try:
+#        plan = next(p for p in plans if p.id == id)
+#    except StopIteration:
+#        abort(404)
+
+#    plan_html = render_template("mealplan.html", plan)
+#    return render_pdf(HTML(string=plan_html))

@@ -398,6 +398,7 @@ class HomePage extends React.Component {
           <li key={plan.id} class="list-group-item">
             <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
             <br />
+            <a class="btn btn-link" href="/api/mealplan/{plan.id}.pdf" download>Download</a>
             <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
           </li>
         ))}
@@ -965,7 +966,9 @@ class PriceListingAdminPage extends React.Component {
     this.state = {
       priceListings: [],
       token: '',
-      redirect: ''
+      redirect: '',
+      ingredientKeyword: '',
+      sourceKeyword: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -973,6 +976,9 @@ class PriceListingAdminPage extends React.Component {
     } else {
       this.state.redirect = '/login';
     }
+
+    this.setIngredientKeyword = this.setIngredientKeyword.bind(this);
+    this.setSourceKeyword = this.setSourceKeyword.bind(this);
 
     this.fetchListings();
   }
@@ -983,6 +989,10 @@ class PriceListingAdminPage extends React.Component {
       url: '/api/adminpricelistings',
       headers: {
         'Authorization': `Bearer ${this.state.token}`
+      },
+      params: {
+        ingredient: this.state.ingredientKeyword,
+        source: this.state.sourceKeyword
       }
     }).then(response => {
       this.setState({priceListings: response.data.results});
@@ -1070,6 +1080,14 @@ class PriceListingAdminPage extends React.Component {
     })});
   }
 
+  setIngredientKeyword(e) {
+    this.setState({ingredientKeyword: e.target.value}, this.fetchListings);
+  }
+
+  setSourceKeyword(e) {
+    this.setState({sourceKeyword: e.target.value}, this.fetchListings);
+  }
+
   render() {
     if (this.state.redirect) {
       console.log("redirecting");
@@ -1103,8 +1121,8 @@ class PriceListingAdminPage extends React.Component {
               <th>Units</th>
               <th>Source</th>
               <th>Time Created</th>
-              <th></th>
-              <th></th>
+              <th><input type="text" class="form-control" placeholder="Filter ingredients" value={this.state.ingredientKeyword} onChange={this.setIngredientKeyword}/></th>
+              <th><input type="text" class="form-control" placeholder="Filter sources" value={this.state.sourceKeyword} onChange={this.setSourceKeyword}/></th>
             </tr>
           </thead>
           <tbody>

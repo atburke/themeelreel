@@ -9,7 +9,7 @@ import datetime
 import itertools
 from collections import defaultdict
 
-from app.util import hash_password
+from app.util import hash_password, average_price
 from . import ureg, Q_
 
 TS_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
@@ -19,7 +19,12 @@ def create_tables(connection):
     sql_dir = Path(__file__).parent.joinpath("database")
     with open(sql_dir.joinpath("schema.sql")) as f:
         for statement in f.read().split(";"):
-            connection.execute(text(statement))
+            try:
+                connection.execute(text(statement))
+            except OperationalError as e:
+                print(e)
+    # Create triggers
+    # trigger_update_avg(connection)
 
 
 def clear_tables(connection):
@@ -31,6 +36,30 @@ def clear_tables(connection):
             except OperationalError as e:
                 if "no such table" not in str(e).lower():
                     raise
+
+
+# def trigger_update_avg(connection):
+#     statement = text(
+#         """
+#         CREATE TRIGGER UpdateAvg
+#             AFTER INSERT ON Ingredient_Price_Listing
+#             FOR EACH ROW
+#             BEGIN
+#                 UPDATE Ingredient
+#                 SET Average_Price_Per_Unit=:avg, Recipe_Units=:units
+#                 WHERE Ingredient_Name = NEW.Ingredient_Name;
+#             END;
+#         """
+#         )
+#     update = average_price(
+#         [i for i in db.execute(text(
+#             """
+#             SELECT Ingredient_Price, Ingredient_Units
+#             FROM Ingredient_Price_Listing
+#             """
+#         ))]
+#     )
+#     connection.execute(statement, {'avg':update[0], 'units':update[1]})
 
 
 def check_token(connection, token):
@@ -101,9 +130,11 @@ def create_user(connection, username, password):
     return True
 
 
-def fetch_all_price_listings(db):
+def fetch_all_price_listings(db, ingredient_kw="", source_kw=""):
     statement = text(
-        "SELECT * FROM Ingredient_Price_Listing ORDER BY Ingredient_Name, Ingredient_Source, Ingredient_Units, Ingredient_Price, Time_Added"
+        "SELECT * FROM Ingredient_Price_Listing "
+        "WHERE Ingredient_Name LIKE :ing AND Ingredient_Source LIKE :source "
+        "ORDER BY Ingredient_Name, Ingredient_Source, Ingredient_Units, Ingredient_Price, Time_Added"
     )
     return [
         {
@@ -113,7 +144,9 @@ def fetch_all_price_listings(db):
             "units": r.Ingredient_Units,
             "price": r.Ingredient_Price,
         }
-        for r in db.execute(statement)
+        for r in db.execute(
+            statement, {"ing": f"%{ingredient_kw}%", "source": f"%{source_kw}%"}
+        )
     ]
 
 
@@ -192,6 +225,36 @@ def update_price_listing(db, name, source, time_created, price=None, units=None)
             "source": source,
             "name": name,
         },
+    )
+
+    update_price_average(db, name)
+
+
+def update_price_average(db, name):
+    update = average_price(
+        [
+            i
+            for i in db.execute(
+                text(
+                    """
+            SELECT Ingredient_Price, Ingredient_Units
+            FROM Ingredient_Price_Listing
+            WHERE Ingredient_Name=:name
+            """
+                ),
+                {"name": name},
+            )
+        ]
+    )
+    db.execute(
+        text(
+            """
+        UPDATE Ingredient
+        SET Average_Price_Per_Unit=:avg, Recipe_Units=:units
+        WHERE Ingredient_Name=:name;
+        """
+        ),
+        {"avg": update[0], "units": update[1], "name": name},
     )
 
 
