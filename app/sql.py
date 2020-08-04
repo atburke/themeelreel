@@ -418,7 +418,7 @@ def fetch_meal_plans_for_user(db, username):
     for plan in plans:
         new_plan = {"id": plan.id, "name": plan.title, "timeCreated": plan.timeCreated}
         statement = text(
-            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, Order AS order "
+            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, MealOrder AS order "
             "FROM Recipe R JOIN Consists_Of C ON R.Recipe_Name = C.Recipe_Name "
             "WHERE Meal_Plan_ID = :id "
             "ORDER BY day, order"

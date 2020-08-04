@@ -38,7 +38,7 @@ CREATE TABLE Consists_Of (
 	Recipe_Name VARCHAR(50) NOT NULL,
 	Meal_Plan_ID VARCHAR(50) NOT NULL,
 	Day INT,
-	Order INT,
+	MealOrder INT,
 	PRIMARY KEY (Recipe_Name, Meal_Plan_ID),
 	FOREIGN KEY (Recipe_Name) REFERENCES Recipe ON DELETE CASCADE,
 	FOREIGN KEY (Meal_Plan_ID) REFERENCES Meal_Plan ON DELETE CASCADE
