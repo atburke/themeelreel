@@ -582,6 +582,7 @@ class PlanMealPage extends React.Component {
   render() {
     console.log("rendering plan meal page");
     if (this.state.redirect) {
+      console.log("redirecting")
       return <Redirect to={{
         pathname: this.state.redirect,
         state: { token: this.state.token }
@@ -592,7 +593,7 @@ class PlanMealPage extends React.Component {
       <li key={ing.name} class="list-group-item">
         <div key={ing.name} class="card">
           <div class="card-body">
-            <span>{ing.name}: {ing.amount} {ing.units}</span>
+            <p>{ing.name}: {ing.amount} {ing.units}</p>
             <button class="btn btn-danger" onClick={() => this.deleteMinIngredient(ing.name)}>X</button>
           </div>
         </div>
@@ -614,7 +615,7 @@ class PlanMealPage extends React.Component {
       <div>
         <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <h3>Generate a new meal plan</h3>
-        <form>
+        <div>
           <div class="form-group">
             <label htmlFor="title">Title (optional)</label>
             <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
@@ -632,10 +633,20 @@ class PlanMealPage extends React.Component {
             <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
           </div>
           <hr />
-          <h4>Minimum Ingredients</h4>
-          {mins}
-          <h4>Maximum Ingredients</h4>
-          {maxs}
+          <div class="row">
+            <div class="col-6">
+              <h4>Minimum Ingredients</h4>
+              <ul class="list-group">
+                {mins}
+              </ul>
+            </div>
+            <div class="col-6">
+              <h4>Maximum Ingredients</h4>
+              <ul class="list-group">
+                {maxs}
+              </ul>
+            </div>
+          </div>
           <hr />
           <div class="form-group">
             <label htmlFor="search-ingr">Ingredient</label>
@@ -666,7 +677,7 @@ class PlanMealPage extends React.Component {
             <button class="btn btn-light" onClick={this.addMaxIngredient}>Add as maximum</button>
           </div>
           <button class="btn btn-primary" onClick={this.submitPlan}>Create Plan</button>
-        </form>
+        </div>
       </div>
     );
   }
@@ -897,19 +908,18 @@ class PriceListingPage extends React.Component {
         <div>
           <form onSubmit={this.addPriceListing}>
             <h5>{this.state.newIngredientName}</h5>
-            <div class="form-row">
+            <div>
               <div class="form-group">
-                <label htmlFor="source" class="col-1 col-form-label">Source</label>
-                <input type="text" class="form-control col-3" id="source" value={this.state.newIngredientSource} onChange={this.selectSource} />
+                <label htmlFor="source">Source</label>
+                <input type="text" class="form-control" id="source" value={this.state.newIngredientSource} onChange={this.selectSource} />
               </div>
               <div class="form-group">
-                <label htmlFor="price" class="col-1 col-form-label">Price: </label>
-                $<input type="number" class="form-control col-2" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
+                <label htmlFor="price">Price ($): </label>
+                <input type="number" class="form-control" id="price" min="0" step="0.01" value={this.state.newIngredientPrice} onChange={this.setPrice}/>
               </div>
               <div class="form-group">
-                <label class="col-1 col-form-label" htmlFor="amount">Amount</label>
-                <input type="number" class="form-control col-2" id="amount" min="0" step="0.01" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
-                <div class="col-1">{this.state.newIngredientUnits}</div>
+                <label htmlFor="amount">Amount ({this.state.newIngredientUnits})</label>
+                <input type="number" class="form-control" id="amount" min="0" step="0.01" value={this.state.newIngredientAmount} onChange={this.setAmount}/>
             </div>
             </div>
             <button type="submit" class="btn btn-primary">Submit</button>
