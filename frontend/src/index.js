@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import './index.css';
 import axios from 'axios';
+import _ from 'lodash';
 
 function App() {
   return (
@@ -723,60 +724,77 @@ class PriceListingPage extends React.Component {
 
   searchIngredient(e) {
     let searchTerm = e.target.value;
-    this.setState({ingredientSearchTerm: searchTerm});
-    if (!searchTerm) {
-      this.setState({ingredientSuggestions: []});
-      return;
-    }
 
-    axios({
-      method: 'get',
-      url: '/api/search/ingredient',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        kw: searchTerm
+    this.setState({ingredientSearchTerm: searchTerm}, () => {
+      if (!this.searchIngredientFn) {
+        this.searchIngredientFn = _.debounce(() => {
+          if (!this.state.ingredientSearchTerm) {
+            this.setState({ingredientSuggestions: []});
+            return;
+          }
+
+          axios({
+            method: 'get',
+            url: '/api/search/ingredient',
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            },
+            params: {
+              kw: this.state.ingredientSearchTerm
+            }
+          }).then(response => {
+            console.log(response.data);
+            this.setState({ingredientSuggestions: response.data.results});
+          }).catch(error => {
+            if (error.status === 401) {
+              this.setState({redirect: '/login'});
+            } else {
+              this.setState({error: error.data.error});
+            }
+          });
+        },   400  );
       }
-    }).then(response => {
-      console.log(response.data);
-      this.setState({ingredientSuggestions: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else {
-        this.setState({error: error.data.error});
-      }
+
+      this.searchIngredientFn();
     });
+
   }
 
   searchUnit(e) {
     let searchTerm = e.target.value;
-    this.setState({unitSearchTerm: searchTerm});
-    if (!searchTerm) {
-      this.setState({unitSuggestions: []});
-      return;
-    }
+    this.setState({unitSearchTerm: searchTerm}, () => {
+      if (!this.searchUnitFn) {
+        this.searchUnitFn = _.debounce(() => {
+          if (!this.state.unitSearchTerm) {
+            this.setState({unitSuggestions: []});
+            return;
+          }
 
-    axios({
-      method: 'get',
-      url: '/api/search/unit',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        kw: searchTerm
+          axios({
+            method: 'get',
+            url: '/api/search/unit',
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            },
+            params: {
+              kw: searchTerm
+            }
+          }).then(response => {
+            console.log(response.data);
+            this.setState({unitSuggestions: response.data.results});
+          }).catch(error => {
+            if (error.status === 401) {
+              this.setState({redirect: '/login'});
+            } else {
+              this.setState({error: error.data.error});
+            }
+          });
+        },   400  );
       }
-    }).then(response => {
-      console.log(response.data);
-      this.setState({unitSuggestions: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else {
-        this.setState({error: error.data.error});
-      }
+
+      this.searchUnitFn();
     });
+
   }
 
   fetchNeededPriceListing() {
@@ -987,27 +1005,33 @@ class PriceListingAdminPage extends React.Component {
   }
 
   fetchListings() {
-    axios({
-      method: 'get',
-      url: '/api/adminpricelistings',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        ingredient: this.state.ingredientKeyword,
-        source: this.state.sourceKeyword
-      }
-    }).then(response => {
-      this.setState({priceListings: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else if (error.status === 403) {
-        this.setState({error: 'Not an admin'});
-      } else {
-        this.setState({error: error.data.error});
-      }
-    });
+    if (!this.fetchFn) {
+      this.fetchFn = _.debounce(() => {
+        axios({
+          method: 'get',
+          url: '/api/adminpricelistings',
+          headers: {
+            'Authorization': `Bearer ${this.state.token}`
+          },
+          params: {
+            ingredient: this.state.ingredientKeyword,
+            source: this.state.sourceKeyword
+          }
+        }).then(response => {
+          this.setState({priceListings: response.data.results});
+        }).catch(error => {
+          if (error.status === 401) {
+            this.setState({redirect: '/login'});
+          } else if (error.status === 403) {
+            this.setState({error: 'Not an admin'});
+          } else {
+            this.setState({error: error.data.error});
+          }
+        });
+      }, 400);
+    }
+
+    this.fetchFn();
   }
 
   updateListing(listing) {
