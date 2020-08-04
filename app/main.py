@@ -35,7 +35,9 @@ def close_db(error):
     Closes the database again at the end of the request.
     """
     if hasattr(g, "connection"):
-        g.connection.close()
+        db = g.pop('connection', None)
+        if db:
+            db.close()
 
 
 def get_db():
@@ -43,10 +45,13 @@ def get_db():
     Opens a new database connection if there is none yet for the
     current application context.
     """
-    if not hasattr(g, "connection"):
+    if not hasattr(g, "engine"):
         g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
+
+    if not hasattr(g, "connection"):
         g.connection = g.engine.connect()
         create_tables(g.connection)
+
     return g.connection
 
 
