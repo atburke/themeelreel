@@ -31,9 +31,9 @@ class BPlusTree:
 
             else:
                 left_child.indices = root.indices[:midpoint]
-                left_child.children = root.children[:midpoint+1]
-                right_child.indices = root.indices[midpoint+1:]
-                right_child.children = root.children[midpoint+1:]
+                left_child.children = root.children[: midpoint + 1]
+                right_child.indices = root.indices[midpoint + 1 :]
+                right_child.children = root.children[midpoint + 1 :]
 
             new_index = root.indices[midpoint]
 
@@ -43,10 +43,6 @@ class BPlusTree:
             new_root.children.append(right_child)
 
             self.root = new_root
-
-
-
-
 
     def remove(self, x):
         self.root.remove(x)
@@ -95,7 +91,6 @@ class BTreeNode:
         if child.prev_leaf:
             child.prev_leaf.next_leaf = left_child
 
-
         if child.next_leaf:
             child.next_leaf.prev_leaf = right_child
 
@@ -107,9 +102,9 @@ class BTreeNode:
 
         else:
             left_child.indices = child.indices[:midpoint]
-            left_child.children = child.children[:midpoint+1]
-            right_child.indices = child.indices[midpoint+1:]
-            right_child.children = child.children[midpoint+1:]
+            left_child.children = child.children[: midpoint + 1]
+            right_child.indices = child.indices[midpoint + 1 :]
+            right_child.children = child.children[midpoint + 1 :]
 
         new_index = bisect.bisect(self.indices, popped_index)
         self.indices.insert(new_index, popped_index)
@@ -141,7 +136,7 @@ class BTreeNode:
 
     def remove(self, x):
         if self.is_leaf:
-            target_index = self.indices.index(x)    # propagate exception
+            target_index = self.indices.index(x)  # propagate exception
             self.indices.pop(target_index)
             self.children.pop(target_index)
             return not self.is_root and len(self.indices) < self.degree
@@ -151,17 +146,17 @@ class BTreeNode:
             return False
 
         idx = bisect.bisect(self.indices, x)
-        if idx > 0 and len(self.children[idx-1]) > self.degree:
-            left = self.children[idx-1]
+        if idx > 0 and len(self.children[idx - 1]) > self.degree:
+            left = self.children[idx - 1]
             shift_idx = left.indices.pop()
             shift_child = left.children.pop()
             child.indices.insert(0, shift_idx)
             child.children.insert(0, shift_child)
-            self.indices[idx-1] = child.indices[0]
+            self.indices[idx - 1] = child.indices[0]
             return False
 
-        if idx < len(self) - 1 and len(self.children[idx+1]) > self.degree:
-            right = self.children[idx+1]
+        if idx < len(self) - 1 and len(self.children[idx + 1]) > self.degree:
+            right = self.children[idx + 1]
             shict_idx = right.indices.pop(0)
             shift_child = right.children.pop(0)
             child.indices.append(shift_idx)
@@ -173,10 +168,10 @@ class BTreeNode:
         # ensure than idx is between left and right
         if idx < len(self) - 1:
             left = self.children[idx]
-            right = self.children[idx+1]
+            right = self.children[idx + 1]
 
         else:
-            left = self.children[idx-1]
+            left = self.children[idx - 1]
             right = self.children[idx]
             idx -= 1
 

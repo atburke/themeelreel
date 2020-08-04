@@ -77,7 +77,7 @@ def find_meals(
     @lru_cache(maxsize=8)
     def max_search_index(price):
         return price_tree.find(price)
-        #return bisect(price_cutoffs, price)
+        # return bisect(price_cutoffs, price)
 
     meal_selections = []
     max_iterations = 1_000

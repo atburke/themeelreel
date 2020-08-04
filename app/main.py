@@ -10,7 +10,6 @@ from flask import (
     make_response,
     g,
 )
-from flask_weasyprint import HTML, render_pdf
 
 from secrets import token_hex
 import sqlalchemy
@@ -47,6 +46,7 @@ def get_db():
     if not hasattr(g, "connection"):
         g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
         g.connection = g.engine.connect()
+        create_tables(g.connection)
     return g.connection
 
 
@@ -169,7 +169,10 @@ def admin_list():
     db = get_db()
     ingredient_kw = request.args.get("ingredient", "")
     source_kw = request.args.get("source", "")
-    return (jsonify({"results": fetch_all_price_listings(db, ingredient_kw, source_kw)}), 200)
+    return (
+        jsonify({"results": fetch_all_price_listings(db, ingredient_kw, source_kw)}),
+        200,
+    )
 
 
 # POST /api/adminpricelistings/update
@@ -235,7 +238,7 @@ def access_list():
             units=data.get("units"),
         )
         update_price_average(db, data["ingredientName"])
-        return (jsonify({'results': 'Item added.'}), 200)
+        return (jsonify({"results": "Item added."}), 200)
 
 
 # GET /api/search/ingredient?kw=<keyword>
@@ -319,15 +322,15 @@ def delete_meal_plan():
     return (jsonify({}), 200)
 
 
-@requires_token
-@app.route("/api/mealplan/<id>.pdf")
-def download_meal_plan(id):
-    db = get_db()
-    plans = fetch_meal_plans_for_user(db, g.user)
-    try:
-        plan = next(p for p in plans if p.id == id)
-    except StopIteration:
-        abort(404)
+# @requires_token
+# @app.route("/api/mealplan/<id>.pdf")
+# def download_meal_plan(id):
+#    db = get_db()
+#    plans = fetch_meal_plans_for_user(db, g.user)
+#    try:
+#        plan = next(p for p in plans if p.id == id)
+#    except StopIteration:
+#        abort(404)
 
-    plan_html = render_template("mealplan.html", plan)
-    return render_pdf(HTML(string=plan_html))
+#    plan_html = render_template("mealplan.html", plan)
+#    return render_pdf(HTML(string=plan_html))

@@ -1071,11 +1071,11 @@ class PriceListingAdminPage extends React.Component {
   }
 
   setIngredientKeyword(e) {
-    this.setState({ingredientKeyword: e.target.value});
+    this.setState({ingredientKeyword: e.target.value}, this.fetchListings);
   }
 
   setSourceKeyword(e) {
-    this.setState({sourceKeyword: e.target.value});
+    this.setState({sourceKeyword: e.target.value}, this.fetchListings);
   }
 
   render() {

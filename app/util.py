@@ -1,4 +1,5 @@
 import hashlib
+from . import ureg
 
 
 def hash_password(pw, salt):
@@ -15,15 +16,17 @@ def average_price(ingredients):
     """
     # Empty case
     if not ingredients:
-        return (0, '')
+        return (0, "")
 
-    ureg = UnitRegistry()
     # Check if unit exists in registry. If not, skip.
     quantities = [ureg.Quantity(i[0], i[1]) for i in ingredients if i[1] in ureg]
     item_units = [item.units for item in quantities]
     # Determine most frequent unit in list. This will be our unit basis.
     freq_unit = max(set(item_units), key=item_units.count)
-    return (sum([i.to(freq_unit).magnitude for i in quantities])/len(quantities), str(freq_unit))
+    return (
+        sum([i.to(freq_unit).magnitude for i in quantities]) / len(quantities),
+        str(freq_unit),
+    )
 
 
 def online_stats(data):
