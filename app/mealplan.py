@@ -69,14 +69,18 @@ def find_meals(
 
     means, variances = online_stats([r.costPerCalorie or 0.005 for r in recipes])
     price_cutoffs = [mean + 2 * math.sqrt(var) for mean, var in zip(means, variances)]
-    price_tree = BPlusTree(1000)
+    price_tree = BPlusTree(20)
     for i, cutoff in enumerate(price_cutoffs):
         price_tree.insert(cutoff, i)
+
+    use_tree = list(iter(price_tree)) == price_cutoffs
 
     @lru_cache(maxsize=8)
     def max_search_index(price):
         #print(list(iter(price_tree))[:50])
-        #return price_tree.find(price)
+        if use_tree:
+            return price_tree.find(price)
+
         return bisect(price_cutoffs, price)
 
     meal_selections = []
