@@ -312,7 +312,7 @@ def get_units(db, kw):
 
 def fetch_recipes(db, excludes=None):
     excludes = excludes or []
-    constraint_str = "WHERE cost IS NOT NULL" (
+    constraint_str = "WHERE cost IS NOT NULL " + (
         "AND name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
         if excludes
         else ""
