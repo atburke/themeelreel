@@ -346,7 +346,7 @@ def download_meal_plan(id):
    db = get_db()
    plans = fetch_meal_plans_for_user(db, g.user)
    try:
-       plan = next(p for p in plans if p.id == id)
+       plan = next(p for p in plans if p["id"] == id)
    except StopIteration:
        abort(404)
 
