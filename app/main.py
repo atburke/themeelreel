@@ -60,7 +60,7 @@ def get_db():
 
 def requires_token(f):
     @functools.wraps(f)
-    def wrapper():
+    def wrapper(*args):
         try:
             token = request.headers["Authorization"].split(" ")[1]
         except IndexError:
@@ -73,7 +73,7 @@ def requires_token(f):
         g.user = user
         if not user:
             abort(401)
-        result = f()
+        result = f(*args)
         g.pop("user")
         return result
 
@@ -340,8 +340,8 @@ def delete_plan():
     return (jsonify({}), 200)
 
 
-@requires_token
 @app.route("/api/mealplan/<id>.pdf")
+@requires_token
 def download_meal_plan(id):
    db = get_db()
    plans = fetch_meal_plans_for_user(db, g.user)

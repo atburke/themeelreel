@@ -436,7 +436,7 @@ class HomePage extends React.Component {
           <li key={plan.id} class="list-group-item">
             <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
             <br />
-            <a class="btn btn-link" href="/api/mealplan/{plan.id}.pdf" download>Download</a>
+            <a class="btn btn-link" href={`/api/mealplan/${plan.id}.pdf`} download>Download</a>
             <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
           </li>
         ))}

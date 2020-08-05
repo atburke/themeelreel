@@ -39,8 +39,6 @@ def check_plan(db, meals, budget, cals, min_ingredients=None, max_ingredients=No
 def find_meals(
     db, budget, total_calories, min_ingredients=None, max_ingredients=None,
 ):
-    print(budget)
-    print(total_calories)
     if not min_ingredients:
         min_ingredients = {}
 
@@ -71,7 +69,6 @@ def find_meals(
 
     means, variances = online_stats([r.costPerCalorie or 0.005 for r in recipes])
     price_cutoffs = [mean + 2 * math.sqrt(var) for mean, var in zip(means, variances)]
-    print(price_cutoffs)
     price_tree = BPlusTree(1000)
     for i, cutoff in enumerate(price_cutoffs):
         price_tree.insert(cutoff, i)
@@ -144,9 +141,6 @@ def find_meals(
         or any(amt > 0 for amt in planner.min_ingredients.values())
         or any(amt < 0 for amt in planner.max_ingredients.values())
     ):
-        print(planner.meal_selections)
-        print(planner.budget_left)
-        print(planner.calories_needed)
         if n == max_iterations:
             raise RuntimeError(f"Could not create plan within {n} iterations")
 
@@ -163,18 +157,14 @@ def find_meals(
                         too_much = True
                         break
                 break
-        print(f"too much: {too_much}")
         if too_much:
             continue
-
-        print(planner.budget_left / planner.calories_needed)
 
         i = (
             max_search_index(planner.budget_left / planner.calories_needed)
             if planner.calories_needed > 0
             else len(recipes)
         )
-        print(i)
         if i == 0 or planner.budget_left < 0:
             remove_meal(None, planner)
             continue
@@ -196,7 +186,6 @@ def find_meals(
             add_meal(new_meal_index, planner)
 
     result = [recipes[i] for i in planner.meal_selections]
-    print(result)
     return result
 
 
