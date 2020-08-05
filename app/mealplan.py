@@ -78,8 +78,8 @@ def find_meals(
     @lru_cache(maxsize=8)
     def max_search_index(price):
         #print(list(iter(price_tree))[:50])
-        if use_tree:
-            return price_tree.find(price)
+        #if use_tree:
+        #    return price_tree.find(price)
 
         return bisect(price_cutoffs, price)
 
