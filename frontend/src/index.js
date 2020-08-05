@@ -10,6 +10,7 @@ import {
 import './index.css';
 import axios from 'axios';
 import _ from 'lodash';
+import { saveAs } from 'file-saver';
 
 function App() {
   return (
@@ -386,6 +387,8 @@ class HomePage extends React.Component {
       this.state.redirect = '/login';
     }
 
+    this.savePDF = this.savePDF.bind(this);
+
     this.fetchMealPlans();
   }
 
@@ -420,6 +423,21 @@ class HomePage extends React.Component {
     })
   }
 
+  savePDF(e, id) {
+    e.preventDefault();
+
+    axios({
+      method: 'get',
+      url: `/api/mealplan/${id}.pdf`,
+      responseType: 'blob',
+      headers: {
+        'Authorization': `Bearer ${this.state.token}`
+      }
+    }).then(response => {
+      saveAs(response.data, `${id}.pdf`);
+    }).catch(error => console.log(error));
+  }
+
   render() {
     if (this.state.redirect) {
       return <Redirect to={{
@@ -437,7 +455,7 @@ class HomePage extends React.Component {
           <li key={plan.id} class="list-group-item">
             <MealPlan name={plan.name} timeCreated={plan.timeCreated} totalCost={plan.totalCost} totalCalories={plan.totalCalories} recipes={plan.recipes}/>
             <br />
-            <a class="btn btn-link" href={`/api/mealplan/${plan.id}.pdf`} download>Download</a>
+            <a class="btn btn-link" href={`/api/mealplan/${plan.id}.pdf`} download onClick={(e) => this.savePDF(e, plan.id)}>Download</a>
             <button class="btn btn-danger" onClick={() => this.deleteMealPlan(plan.id)}>Delete</button>
           </li>
         ))}
