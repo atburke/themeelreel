@@ -60,7 +60,7 @@ def get_db():
 
 def requires_token(f):
     @functools.wraps(f)
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         try:
             token = request.headers["Authorization"].split(" ")[1]
         except IndexError:
@@ -73,7 +73,7 @@ def requires_token(f):
         g.user = user
         if not user:
             abort(401)
-        result = f(*args)
+        result = f(*args, **kwargs)
         g.pop("user")
         return result
 

@@ -360,6 +360,7 @@ function MealPlan(props) {
         <div class="d-flex flex-wrap">
           {props.recipes.map((dayPlan, index) => (
             <div key={index}>
+            <h3>Day {index + 1}</h3>
               <DayPlan meals={dayPlan}/>
             </div>
           ))}
