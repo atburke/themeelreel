@@ -13,7 +13,7 @@ from flask import (
 
 from secrets import token_hex
 import sqlalchemy
-from sqlalchemy.pool import QueuePool
+from sqlalchemy.pool import NullPool
 import functools
 import hashlib
 import os
@@ -47,7 +47,7 @@ def get_db():
     current application context.
     """
     if not hasattr(g, "engine"):
-        g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"], poolclass=QueuePool, pool_size=10, max_overflow=0)
+        g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"], poolclass=NullPool)
 
     if not hasattr(g, "connection"):
         g.connection = g.engine.connect()
