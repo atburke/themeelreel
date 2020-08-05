@@ -428,7 +428,9 @@ class PlanMealPage extends React.Component {
       newAmount: 0,
       newUnits: '',
       ingredientSearchResults: [],
-      unitSearchResults: []
+      unitSearchResults: [],
+      ingredientKeyword: '',
+      unitKeyword: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -483,34 +485,53 @@ class PlanMealPage extends React.Component {
 
   updateIngredientSearch(e) {
     let kw = e.target.value;
-    axios({
-      method: 'get',
-      url: '/api/search/ingredient',
-      params: {
-        kw: kw
-      },
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
+
+    this.setState({ingredientKeyword: kw}, () => {
+      if (!this.ingFn) {
+        this.ingFn = _.debounce(() => {
+          axios({
+            method: 'get',
+            url: '/api/search/ingredient',
+            params: {
+              kw: this.state.ingredientKeyword
+            },
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            }
+          }).then(response => {
+            this.setState({ingredientSearchResults: response.data.results});
+          });
+        }, 400);
       }
-    }).then(response => {
-      this.setState({ingredientSearchResults: response.data.results});
     });
+
+    this.ingFn();
   }
 
   updateUnitSearch(e) {
     let kw = e.target.value;
-    axios({
-      method: 'get',
-      url: '/api/search/unit',
-      params: {
-        kw: kw
-      },
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
+
+    this.setState({unitKeyword: kw}, () => {
+      if (!this.unitFn) {
+        this.unitFn = _.debounce(() => {
+          axios({
+            method: 'get',
+            url: '/api/search/unit',
+            params: {
+              kw: this.state.unitKeyword
+            },
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            }
+          }).then(response => {
+            this.setState({unitSearchResults: response.data.results});
+          });
+        }, 400);
       }
-    }).then(response => {
-      this.setState({unitSearchResults: response.data.results});
     });
+
+    this.unitFn();
+
   }
 
   addMinIngredient() {
@@ -656,7 +677,7 @@ class PlanMealPage extends React.Component {
           <hr />
           <div class="form-group">
             <label htmlFor="search-ingr">Ingredient</label>
-            <input id="search-ingr" class="form-control" type="text" onChange={this.updateIngredientSearch} />
+            <input id="search-ingr" class="form-control" type="text" value={this.ingredientKeyword} onChange={this.updateIngredientSearch} />
           </div>
           <ul class="list-group list-group-horizontal">
             {this.state.ingredientSearchResults.map(name => (
@@ -665,7 +686,7 @@ class PlanMealPage extends React.Component {
           </ul>
           <div class="form-group">
             <label htmlFor="search-unit">Unit</label>
-            <input id="search-unit" class="list-group-item" type="text" onChange={this.updateUnitSearch} />
+            <input id="search-unit" class="list-group-item" type="text" value={this.unitKeyword} onChange={this.updateUnitSearch} />
           </div>
           <ul class="list-group list-group-horizontal">
             {this.state.unitSearchResults.map(name => (
