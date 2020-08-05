@@ -346,15 +346,15 @@ def fetch_ingredients_for_recipes(db, includes=None, excludes=None):
     excludes = excludes or []
     if excludes:
         if len(excludes) > 1:
-            constraints.append("ingredientName NOT IN :excludes")
+            constraints.append("Req.Ingredient_Name NOT IN :excludes")
         else:
-            constraints.append("ingredientName <> :firstExcludes")
+            constraints.append("Req.Ingredient_Name <> :firstExcludes")
 
     if includes:
         if len(includes) > 1:
-            constraints.append("ingredientName IN :includes")
+            constraints.append("Req.Ingredient_Name IN :includes")
         else:
-            constraints.append("ingredientName = :firstIncludes")
+            constraints.append("Req.Ingredient_Name = :firstIncludes")
 
     constraint_str = f"WHERE {' AND '.join(constraints)} " if constraints else ""
 
