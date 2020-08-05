@@ -46,6 +46,13 @@ def create_tables(connection):
 
 def update_recipe_costs(db, ing_name):
     statement = text(
+        "SELECT Recipe_Name AS name "
+        "FROM Requires "
+        "WHERE :ingName = Requires.Ingredient_Name"
+    )
+    recipes = db.execute(statement, {"ingName": ing_name})
+    for recipe in recipes:
+        statement = text(
         "UPDATE Recipe "
         "SET Recipe_Cost = ( "
                 "SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit) "
@@ -53,12 +60,9 @@ def update_recipe_costs(db, ing_name):
                 "WHERE Recipe_Name = Requires.Recipe_Name "
                 "GROUP BY Recipe_Name "
         ") "
-        "WHERE Recipe_Name IN ( "
-                "SELECT Recipe_Name "
-                "FROM Requires "
-                "WHERE :ingName = Requires.Ingredient_Name);"
-    )
-    db.execute(statement, {"ingName": ing_name})
+        " WHERE Recipe_Name = :name;"
+        )
+        db.execute(statement)
 
 
 def clear_tables(connection):
