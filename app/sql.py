@@ -57,8 +57,7 @@ def update_recipe_costs(db, ing_name):
         "SET Recipe_Cost = ( "
                 "SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit) "
                 "FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name) "
-                "WHERE Recipe_Name = Requires.Recipe_Name "
-                "GROUP BY Recipe_Name "
+                "WHERE Recipe_Name = :name"
         ") "
         " WHERE Recipe_Name = :name;"
         )
