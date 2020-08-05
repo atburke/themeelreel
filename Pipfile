@@ -17,6 +17,7 @@ recipe-scrapers = "*"
 pymysql = "*"
 attrs = "*"
 pint = "*"
+flask-weasyprint = "*"
 
 [requires]
 python_version = "3.7"

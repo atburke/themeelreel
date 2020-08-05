@@ -167,11 +167,14 @@ class LoginPage extends React.Component {
           <div class="row">
               <div class="col-md-6 cols">
                 <h4>What is The MeelReel?</h4>
-                <ul>
-                  <li>The MeelReel is a web application that generates meal plans for a specified interval. Its primary feature is its budget filter; users are able to enter the maximum amount of money they want to spend on food for the specified interval and their desired number of servings/caloric intake, and the application generates a meal plan whose total cost does not exceed the budget limit. When creating a meal plan, users are able to specify ingredients that they do not want included in their meal plan.</li>
-                  <li>Users can create an account to save and delete meal plans. When viewing a meal plan, a user can save it locally as a PDF.</li>
-                  <li>Users can enter price listings for individual ingredients; listings include the price, quantity, units, and source of information.</li>
-                </ul>
+                <p>
+                  The MeelReel is a web application that generates meal plans
+                  for a specified interval. Its primary feature is its budget
+                  filter; you can enter the maximum amount of money you want to
+                  spend on food for the specified interval and your desired
+                  caloric intake, and the application generates a meal plan
+                  in your budget.
+                </p>
               </div>
               <div class="col-md-6 cols">
               <h4>Sign In</h4>
@@ -563,7 +566,6 @@ class PlanMealPage extends React.Component {
         }, 400);
       }
       this.unitFn();
-      
     });
 
   }
@@ -714,16 +716,16 @@ class PlanMealPage extends React.Component {
             <label htmlFor="search-ingr">Ingredient</label>
             <input id="search-ingr" class="form-control" type="text" value={this.ingredientKeyword} onChange={this.updateIngredientSearch} />
           </div>
-          <ul class="list-group list-group-horizontal">
+          <ul class="list-group list-group-horizontal d-flex flex-wrap">
             {this.state.ingredientSearchResults.map(name => (
               <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.setIngredient(name)}>{name}</button></li>
             ))}
           </ul>
           <div class="form-group">
             <label htmlFor="search-unit">Unit</label>
-            <input id="search-unit" class="list-group-item" type="text" value={this.unitKeyword} onChange={this.updateUnitSearch} />
+            <input id="search-unit" class="form-control" type="text" value={this.unitKeyword} onChange={this.updateUnitSearch} />
           </div>
-          <ul class="list-group list-group-horizontal">
+          <ul class="list-group list-group-horizontal d-flex flex-wrap">
             {this.state.unitSearchResults.map(name => (
               <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.setUnits(name)}>{name}</button></li>
             ))}
@@ -960,7 +962,7 @@ class PriceListingPage extends React.Component {
     let ingredientOptions;
     if (this.state.ingredientSuggestions) {
       ingredientOptions = (
-        <ul class="list-group list-group-horizontal">
+        <ul class="list-group list-group-horizontal d-flex flex-wrap">
           {this.state.ingredientSuggestions.map(name => (
             <li key={name} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.selectIngredient(name)}>{name}</button></li>
           ))}
@@ -973,7 +975,7 @@ class PriceListingPage extends React.Component {
     let unitOptions;
     if (this.state.unitSuggestions) {
       unitOptions = (
-        <ul class="list-group list-group-horizontal">
+        <ul class="list-group list-group-horizontal d-flex flex-wrap">
         {this.state.unitSuggestions.map(unit => (
           <li key={unit} class="list-group-item"><button class="btn btn-secondary" onClick={() => this.selectUnits(unit)}>{unit}</button></li>
         ))}

@@ -455,9 +455,9 @@ def fetch_meal_plans_for_user(db, username):
             }
             new_plan["recipes"][recipe.day - 1].append(recipe_listing)
 
-        new_plan["totalCost"] = sum(
+        new_plan["totalCost"] = round(sum(
             r["cost"] for r in itertools.chain.from_iterable(new_plan["recipes"])
-        )
+        ), 2)
         new_plan["totalCalories"] = sum(
             r["calories"] for r in itertools.chain.from_iterable(new_plan["recipes"])
         )
