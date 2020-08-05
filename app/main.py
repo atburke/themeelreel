@@ -350,5 +350,5 @@ def download_meal_plan(id):
    except StopIteration:
        abort(404)
 
-   plan_html = render_template("mealplan.html", plan)
+   plan_html = render_template("mealplan.html", **plan)
    return render_pdf(HTML(string=plan_html))
