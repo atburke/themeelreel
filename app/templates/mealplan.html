@@ -18,10 +18,10 @@
             <img class="card-img-top" src="{{ recipe.imageURL }}" alt="{{ recipe.name }}" />
             <div class="card-body">
               <h3 class="card-title">{{ recipe.name }}</h3>
-              <div class="card-text">
+              <p class="card-text">
                 <div>Cost: ${{ recipe.cost }}</div>
                 <div>Calories: {{ recipe.calories }}</div>
-              </div>
+              </p>
               <div><a href="{{ recipe.recipeURL }}">Get recipe</a></div>
             </div>
           </div>
