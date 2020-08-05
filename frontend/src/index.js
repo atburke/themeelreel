@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import './index.css';
 import axios from 'axios';
+import _ from 'lodash';
 
 function App() {
   return (
@@ -156,6 +157,7 @@ class LoginPage extends React.Component {
     let errorMessage = this.state.error ? <p>{this.state.error}</p> : <p></p>;
     return (
       <div>
+<<<<<<< HEAD
         <br></br>
         <div class="jumbotron title">
           <h1 class="display-4">The MeelReel</h1>
@@ -195,6 +197,23 @@ class LoginPage extends React.Component {
         <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
       </div>
     </footer>
+=======
+      <p>Don't have an account? <Link to="/newaccount">Sign up</Link></p>
+      {errorMessage}
+        <form onSubmit={this.handleSubmit}>
+          <div class="form-row">
+            <div class="col-md-6">
+              <label htmlFor="username">Username</label>
+              <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
+            </div>
+            <div class="col-md-6">
+              <label htmlFor="password">Password</label>
+              <input type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Log in</button>
+        </form>
+>>>>>>> master
       </div>
     );
   }
@@ -224,9 +243,9 @@ class CreateAccountPage extends React.Component {
   }
 
   handlePassword2Change(event) {
+    let pw2 = event.target.value;
     this.setState((state, props) => {
-      let pw2 = event.target.value;
-      let smallError = state.password1 === pw2 ? 'Passwords must match' : '';
+      let smallError = state.password1 !== pw2 ? 'Passwords must match' : '';
 
       return {
         password2: pw2,
@@ -280,6 +299,7 @@ class CreateAccountPage extends React.Component {
     let smallErrorMessage = this.state.smallError ? <p>{this.state.smallError}</p> : <p></p>;
     return (
       <div>
+<<<<<<< HEAD
         <br></br>
         <div class="jumbotron title">
           <h1 class="display-4">The MeelReel</h1>
@@ -307,6 +327,26 @@ class CreateAccountPage extends React.Component {
         <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
       </div>
     </footer>
+=======
+      <p>Already have an account? <Link to="/login">Log in</Link></p>
+      {errorMessage}
+        <form onSubmit={this.handleSubmit}>
+          <div class="form-group">
+            <label htmlFor="username">Username</label>
+            <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="password1">Password</label>
+            <input type="password" id="password1" class="form-control" value={this.state.password1} onChange={this.handlePassword1Change} />
+          </div>
+          <div class="form-group">
+            <label htmlFor="password2">Retype Password</label>
+            <input type="password" id="password2" class="form-control" value={this.state.password2} onChange={this.handlePassword2Change} />
+          </div>
+          <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+      {smallErrorMessage}
+>>>>>>> master
       </div>
     );
   }
@@ -452,6 +492,7 @@ class PlanMealPage extends React.Component {
       error: '',
       msg: '',
       budget: 0,
+      days: 0,
       dailyCalories: 0,
       title: '',
       minIngredients: [],
@@ -460,7 +501,9 @@ class PlanMealPage extends React.Component {
       newAmount: 0,
       newUnits: '',
       ingredientSearchResults: [],
-      unitSearchResults: []
+      unitSearchResults: [],
+      ingredientKeyword: '',
+      unitKeyword: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -515,34 +558,53 @@ class PlanMealPage extends React.Component {
 
   updateIngredientSearch(e) {
     let kw = e.target.value;
-    axios({
-      method: 'get',
-      url: '/api/search/ingredient',
-      params: {
-        kw: kw
-      },
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
+
+    this.setState({ingredientKeyword: kw}, () => {
+      if (!this.ingFn) {
+        this.ingFn = _.debounce(() => {
+          axios({
+            method: 'get',
+            url: '/api/search/ingredient',
+            params: {
+              kw: this.state.ingredientKeyword
+            },
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            }
+          }).then(response => {
+            this.setState({ingredientSearchResults: response.data.results});
+          });
+        }, 400);
       }
-    }).then(response => {
-      this.setState({ingredientSearchResults: response.data.results});
     });
+
+    this.ingFn();
   }
 
   updateUnitSearch(e) {
     let kw = e.target.value;
-    axios({
-      method: 'get',
-      url: '/api/search/unit',
-      params: {
-        kw: kw
-      },
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
+
+    this.setState({unitKeyword: kw}, () => {
+      if (!this.unitFn) {
+        this.unitFn = _.debounce(() => {
+          axios({
+            method: 'get',
+            url: '/api/search/unit',
+            params: {
+              kw: this.state.unitKeyword
+            },
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            }
+          }).then(response => {
+            this.setState({unitSearchResults: response.data.results});
+          });
+        }, 400);
       }
-    }).then(response => {
-      this.setState({unitSearchResults: response.data.results});
     });
+
+    this.unitFn();
+
   }
 
   addMinIngredient() {
@@ -608,7 +670,8 @@ class PlanMealPage extends React.Component {
       },
       data: message
     }).then(response => {
-      this.setState({msg: response.data.msg});
+      this.setState({redirect: '/'});
+      //this.setState({msg: response.data.msg});
     }).catch(error => {
       this.setState({error: error.data.error});
     });
@@ -651,21 +714,23 @@ class PlanMealPage extends React.Component {
         <AppHeader token={this.state.token} here={this.props.location.pathname} />
         <h3>Generate a new meal plan</h3>
         <div>
-          <div class="form-group">
-            <label htmlFor="title">Title (optional)</label>
-            <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="budget">Budget</label>
-            $<input id="budget" type="number" min="0" step="0.01" class="form-control" value={this.state.budget} onChange={this.setBudget} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="calories">Daily Calories</label>
-            <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="days">Days</label>
-            <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
+          <div class="row">
+            <div class="form-group col-md-6">
+              <label htmlFor="title">Title (optional)</label>
+              <input id="title" type="text" class="form-control" value={this.state.title} onChange={this.setTitle} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="budget">Budget</label>
+              $<input id="budget" type="number" min="0" step="0.01" class="form-control" value={this.state.budget} onChange={this.setBudget} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="calories">Daily Calories</label>
+              <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
+            </div>
+            <div class="form-group col-md-6">
+              <label htmlFor="days">Days</label>
+              <input id="days" type="number" min="1" max="31" class="form-control" value={this.state.days} onChange={this.setDays} />
+            </div>
           </div>
           <hr />
           <div class="row">
@@ -685,7 +750,7 @@ class PlanMealPage extends React.Component {
           <hr />
           <div class="form-group">
             <label htmlFor="search-ingr">Ingredient</label>
-            <input id="search-ingr" class="form-control" type="text" onChange={this.updateIngredientSearch} />
+            <input id="search-ingr" class="form-control" type="text" value={this.ingredientKeyword} onChange={this.updateIngredientSearch} />
           </div>
           <ul class="list-group list-group-horizontal">
             {this.state.ingredientSearchResults.map(name => (
@@ -694,7 +759,7 @@ class PlanMealPage extends React.Component {
           </ul>
           <div class="form-group">
             <label htmlFor="search-unit">Unit</label>
-            <input id="search-unit" class="list-group-item" type="text" onChange={this.updateUnitSearch} />
+            <input id="search-unit" class="list-group-item" type="text" value={this.unitKeyword} onChange={this.updateUnitSearch} />
           </div>
           <ul class="list-group list-group-horizontal">
             {this.state.unitSearchResults.map(name => (
@@ -703,9 +768,9 @@ class PlanMealPage extends React.Component {
           </ul>
           <hr />
           <div class="form-row">
-            <div class="col">{this.state.newIngredient}: </div>
-            <input id="amount" class="form-control col" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
-            <div class="col">{this.state.newUnits}</div>
+            <div class="col-3">{this.state.newIngredient}: </div>
+            <input id="amount" class="form-control col-8" type="number" min="0" step="0.01" value={this.state.newAmount} onChange={this.setAmount} />
+            <div class="col-1">{this.state.newUnits}</div>
           </div>
           <div class="form-group">
             <button class="btn btn-dark" onClick={this.addMinIngredient}>Add as minimum</button>
@@ -732,7 +797,8 @@ class PriceListingPage extends React.Component {
       newIngredientSource: '',
       newIngredientPrice: 0,
       newIngredientUnits: '',
-      redirect: ''
+      redirect: '',
+      msg: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -754,60 +820,78 @@ class PriceListingPage extends React.Component {
 
   searchIngredient(e) {
     let searchTerm = e.target.value;
-    this.setState({ingredientSearchTerm: searchTerm});
-    if (!searchTerm) {
-      this.setState({ingredientSuggestions: []});
-      return;
-    }
 
-    axios({
-      method: 'get',
-      url: '/api/search/ingredient',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        kw: searchTerm
+    this.setState({ingredientSearchTerm: searchTerm}, () => {
+      if (!this.searchIngredientFn) {
+        this.searchIngredientFn = _.debounce(() => {
+          if (!this.state.ingredientSearchTerm) {
+            this.setState({ingredientSuggestions: []});
+            return;
+          }
+
+          axios({
+            method: 'get',
+            url: '/api/search/ingredient',
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            },
+            params: {
+              kw: this.state.ingredientSearchTerm
+            }
+          }).then(response => {
+            console.log(response.data);
+            this.setState({ingredientSuggestions: response.data.results});
+          }).catch(error => {
+            if (error.status === 401) {
+              this.setState({redirect: '/login'});
+            } else {
+              this.setState({error: error.data.error});
+            }
+          });
+        },   400  );
       }
-    }).then(response => {
-      console.log(response.data);
-      this.setState({ingredientSuggestions: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else {
-        this.setState({error: error.data.error});
-      }
+
+      this.searchIngredientFn();
     });
+
   }
 
   searchUnit(e) {
     let searchTerm = e.target.value;
-    this.setState({unitSearchTerm: searchTerm});
-    if (!searchTerm) {
-      this.setState({unitSuggestions: []});
-      return;
-    }
 
-    axios({
-      method: 'get',
-      url: '/api/search/unit',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        kw: searchTerm
+    this.setState({unitSearchTerm: searchTerm}, () => {
+      if (!this.searchUnitFn) {
+        this.searchUnitFn = _.debounce(() => {
+          if (!this.state.unitSearchTerm) {
+            this.setState({unitSuggestions: []});
+            return;
+          }
+
+          axios({
+            method: 'get',
+            url: '/api/search/unit',
+            headers: {
+              'Authorization': `Bearer ${this.state.token}`
+            },
+            params: {
+              kw: this.state.unitSearchTerm
+            }
+          }).then(response => {
+            console.log(response.data);
+            this.setState({unitSuggestions: response.data.results});
+          }).catch(error => {
+            if (error.status === 401) {
+              this.setState({redirect: '/login'});
+            } else {
+              this.setState({error: error.data.error});
+            }
+          });
+        },   400  );
       }
-    }).then(response => {
-      console.log(response.data);
-      this.setState({unitSuggestions: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else {
-        this.setState({error: error.data.error});
-      }
+
+      this.searchUnitFn();
     });
+
   }
 
   fetchNeededPriceListing() {
@@ -892,7 +976,7 @@ class PriceListingPage extends React.Component {
     }).then(response => {
       this.setState({
         error: '',
-        message: `Price for ${newListing.ingredientName} successfully added!`
+        msg: `Price for ${newListing.ingredientName} successfully added!`
       });
     }).catch(error => {
       if (error.status === 401) {
@@ -989,6 +1073,7 @@ class PriceListingPage extends React.Component {
         <hr />
         {form}
         {this.state.error}
+        {this.state.msg}
       </div>
     );
   }
@@ -1018,27 +1103,33 @@ class PriceListingAdminPage extends React.Component {
   }
 
   fetchListings() {
-    axios({
-      method: 'get',
-      url: '/api/adminpricelistings',
-      headers: {
-        'Authorization': `Bearer ${this.state.token}`
-      },
-      params: {
-        ingredient: this.state.ingredientKeyword,
-        source: this.state.sourceKeyword
-      }
-    }).then(response => {
-      this.setState({priceListings: response.data.results});
-    }).catch(error => {
-      if (error.status === 401) {
-        this.setState({redirect: '/login'});
-      } else if (error.status === 403) {
-        this.setState({error: 'Not an admin'});
-      } else {
-        this.setState({error: error.data.error});
-      }
-    });
+    if (!this.fetchFn) {
+      this.fetchFn = _.debounce(() => {
+        axios({
+          method: 'get',
+          url: '/api/adminpricelistings',
+          headers: {
+            'Authorization': `Bearer ${this.state.token}`
+          },
+          params: {
+            ingredient: this.state.ingredientKeyword,
+            source: this.state.sourceKeyword
+          }
+        }).then(response => {
+          this.setState({priceListings: response.data.results});
+        }).catch(error => {
+          if (error.status === 401) {
+            this.setState({redirect: '/login'});
+          } else if (error.status === 403) {
+            this.setState({error: 'Not an admin'});
+          } else {
+            this.setState({error: error.data.error});
+          }
+        });
+      }, 400);
+    }
+
+    this.fetchFn();
   }
 
   updateListing(listing) {

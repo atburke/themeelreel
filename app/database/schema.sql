@@ -38,7 +38,7 @@ CREATE TABLE Consists_Of (
 	Recipe_Name VARCHAR(50) NOT NULL,
 	Meal_Plan_ID VARCHAR(50) NOT NULL,
 	Day INT,
-	Order INT,
+	MealOrder INT,
 	PRIMARY KEY (Recipe_Name, Meal_Plan_ID),
 	FOREIGN KEY (Recipe_Name) REFERENCES Recipe ON DELETE CASCADE,
 	FOREIGN KEY (Meal_Plan_ID) REFERENCES Meal_Plan ON DELETE CASCADE
@@ -70,21 +70,3 @@ CREATE TABLE Ingredient_Price_Listing (
 	PRIMARY KEY (Time_Added, Ingredient_Source, Ingredient_Name),
 	FOREIGN KEY (Ingredient_Name) REFERENCES Ingredient ON DELETE CASCADE
 );
-
-CREATE TRIGGER UpdateCost
-				AFTER UPDATE ON Ingredient
-				FOR EACH ROW
-				BEGIN
-						UPDATE Recipe
-						SET Recipe_Cost = (
-								SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit)
-								FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name)
-								WHERE Recipe_Name = Requires.Recipe_Name
-								GROUP BY Recipe_Name
-						)
-						WHERE Recipe_Name IN (
-								SELECT Recipe_Name
-								FROM Requires
-								WHERE NEW.Ingredient_Name = Requires.Ingredient_Name
-				);
-				END;

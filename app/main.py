@@ -13,6 +13,7 @@ from flask import (
 
 from secrets import token_hex
 import sqlalchemy
+from sqlalchemy.pool import NullPool
 import functools
 import hashlib
 import os
@@ -35,7 +36,9 @@ def close_db(error):
     Closes the database again at the end of the request.
     """
     if hasattr(g, "connection"):
-        g.connection.close()
+        db = g.pop('connection', None)
+        if db:
+            db.close()
 
 
 def get_db():
@@ -43,10 +46,13 @@ def get_db():
     Opens a new database connection if there is none yet for the
     current application context.
     """
+    if not hasattr(g, "engine"):
+        g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"], poolclass=NullPool)
+
     if not hasattr(g, "connection"):
-        g.engine = sqlalchemy.create_engine(app.config["DATABASE_URL"])
         g.connection = g.engine.connect()
         create_tables(g.connection)
+
     return g.connection
 
 
@@ -275,8 +281,9 @@ def get_meal_plans():
 def generate_meal_plan():
     db = get_db()
     data = request.get_json()
-    budget = data["budget"]
-    total_calories = data["days"] * data["dailyCalories"]
+    print(data)
+    budget = float(data["budget"])
+    total_calories = int(data["days"]) * int(data["dailyCalories"])
     min_ingredients = {
         ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["minIngredients"]
     }
@@ -308,7 +315,7 @@ def generate_meal_plan():
         except AssertionError:
             pass
 
-    meal_plan = distribute_meals(meals, data["days"])
+    meal_plan = distribute_meals(meals, int(data["days"]))
     add_meal_plan_for_user(db, g.user, meal_plan, data.get("title"))
     return (jsonify({}), 200)
 

@@ -22,9 +22,46 @@ def create_tables(connection):
             try:
                 connection.execute(text(statement))
             except OperationalError as e:
-                print(e)
+                pass
+                #print(e)
     # Create triggers
     # trigger_update_avg(connection)
+    #statement = text(
+    #"""
+    #CREATE TRIGGER UpdateCost
+    #                AFTER UPDATE ON Ingredient
+    #                FOR EACH ROW
+    #                BEGIN
+
+    #                );
+    #                END;
+    #"""
+    #)
+    #try:
+    #    connection.execute(statement)
+    #except OperationalError as e:
+    #    pass
+        #print(e)
+
+
+def update_recipe_costs(db, ing_name):
+    statement = text(
+        "SELECT Recipe_Name AS name "
+        "FROM Requires "
+        "WHERE :ingName = Requires.Ingredient_Name"
+    )
+    recipes = db.execute(statement, {"ingName": ing_name})
+    for recipe in recipes:
+        statement = text(
+        "UPDATE Recipe "
+        "SET Recipe_Cost = ( "
+                "SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit) "
+                "FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name) "
+                "WHERE Recipe_Name = :name"
+        ") "
+        " WHERE Recipe_Name = :name;"
+        )
+        db.execute(statement, {"name": recipe.name})
 
 
 def clear_tables(connection):
@@ -257,6 +294,8 @@ def update_price_average(db, name):
         {"avg": update[0], "units": update[1], "name": name},
     )
 
+    update_recipe_costs(db, name)
+
 
 def delete_price_listing(db, name, source, time_created):
     statement = text(
@@ -285,8 +324,8 @@ def get_units(db, kw):
 
 def fetch_recipes(db, excludes=None):
     excludes = excludes or []
-    constraint_str = (
-        "WHERE name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
+    constraint_str = "WHERE Recipe_Cost IS NOT NULL " + (
+        "AND name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
         if excludes
         else ""
     )
@@ -297,7 +336,8 @@ def fetch_recipes(db, excludes=None):
         + constraint_str
         + "ORDER BY costPerCalorie"
     )
-    return db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+    results = db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+    return results
 
 
 def fetch_ingredients_for_recipes(db, includes=None, excludes=None):
@@ -391,7 +431,7 @@ def fetch_meal_plans_for_user(db, username):
     for plan in plans:
         new_plan = {"id": plan.id, "name": plan.title, "timeCreated": plan.timeCreated}
         statement = text(
-            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, Order AS order "
+            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, MealOrder AS order "
             "FROM Recipe R JOIN Consists_Of C ON R.Recipe_Name = C.Recipe_Name "
             "WHERE Meal_Plan_ID = :id "
             "ORDER BY day, order"
