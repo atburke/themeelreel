@@ -380,7 +380,7 @@ def fetch_ingredients_for_recipes(db, includes=None, excludes=None):
             try:
                 ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, ing.units)
 
-            except Exception as e:
+            except:     # bare excepts are bad but the right exception is hard to import
                 ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, "lb")
 
     return ingredient_map

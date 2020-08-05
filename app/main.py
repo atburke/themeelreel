@@ -288,14 +288,14 @@ def generate_meal_plan():
     for ing in data["minIngredients"]:
         try:
             min_ingredients[ing["name"]] = Q_(float(ing["amount"]), ing["units"])
-        except Exception as e:
+        except:     # bare excepts are bad but the right exception is hard to import
             min_ingredients[ing["name"]] = Q_(float(ing["amount"]), "lb")
 
     max_ingredients = {}
     for ing in data["maxIngredients"]:
         try:
             max_ingredients[ing["name"]] = Q_(float(ing["amount"]), ing["units"])
-        except Exception as e:
+        except:     # bare excepts are bad but the right exception is hard to import
             max_ingredients[ing["name"]] = Q_(float(ing["amount"]), "lb")
 
     for quantity in min_ingredients.values():
