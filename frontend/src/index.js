@@ -145,6 +145,7 @@ class LoginPage extends React.Component {
 
   render() {
     if (this.state.redirect) {
+      
       console.log(`redirecting to ${this.state.redirect}`);
       return <Redirect to={{
         pathname: this.state.redirect,
@@ -155,21 +156,45 @@ class LoginPage extends React.Component {
     let errorMessage = this.state.error ? <p>{this.state.error}</p> : <p></p>;
     return (
       <div>
-      <p>Don't have an account? <Link to="/newaccount">Sign up</Link></p>
-      {errorMessage}
-        <form onSubmit={this.handleSubmit}>
-          <div class="form-row">
-            <div class="col-3">
-              <label htmlFor="username">Username</label>
-              <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
-            </div>
-            <div class="col-3">
-              <label htmlFor="password">Password</label>
-              <input type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary col-1">Log in</button>
-        </form>
+        <br></br>
+        <div class="jumbotron title">
+          <h1 class="display-4">The MeelReel</h1>
+          <p class="lead">Created By <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></p>
+        </div>
+        <div class="jumbotron">
+        <div class="container">
+          <div class="row">
+              <div class="col-md-6 cols">
+                <h4>What is The MeelReel?</h4>
+                <ul>
+                  <li>The MeelReel is a web application that generates meal plans for a specified interval. Its primary feature is its budget filter; users are able to enter the maximum amount of money they want to spend on food for the specified interval and their desired number of servings/caloric intake, and the application generates a meal plan whose total cost does not exceed the budget limit. When creating a meal plan, users are able to specify ingredients that they do not want included in their meal plan.</li>
+                  <li>Users can create an account to save and delete meal plans. When viewing a meal plan, a user can save it locally as a PDF.</li>
+                  <li>Users can enter price listings for individual ingredients; listings include the price, quantity, units, and source of information.</li>
+                </ul>
+              </div>
+              <div class="col-md-6 cols">
+              <h4>Sign In</h4>
+                  {errorMessage}
+                  <form class="container login_div" onSubmit={this.handleSubmit}>
+                    <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} placeholder="Username" required autofocus=""></input>
+                    <br></br>
+                    <input  type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} placeholder="Password" required></input>
+                    <br></br>
+                    <button class="btn btn-primary" type="submit">Go To Your MeelReel</button>
+                    <br></br>
+                    <br></br>
+                    <p>Don't have an account? <Link to="/newaccount">Sign up</Link></p>
+                  </form>
+              </div>
+        </div>
+      </div>
+        </div>
+        
+        <footer id="sticky-footer" class="jumbotron py-4 text-white-50">
+      <div class="container text-center" id="footer-text">
+        <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
+      </div>
+    </footer>
       </div>
     );
   }
@@ -255,24 +280,33 @@ class CreateAccountPage extends React.Component {
     let smallErrorMessage = this.state.smallError ? <p>{this.state.smallError}</p> : <p></p>;
     return (
       <div>
-      <p>Already have an account? <Link to="/login">Log in</Link></p>
-      {errorMessage}
-        <form onSubmit={this.handleSubmit}>
-          <div class="form-group">
-            <label htmlFor="username">Username</label>
-            <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="password1">Password</label>
-            <input type="password" id="password1" class="form-control" value={this.state.password1} onChange={this.handlePassword1Change} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="password2">Retype Password</label>
-            <input type="password" id="password2" value={this.state.password2} onChange={this.handlePassword2Change} />
-          </div>
-          <button type="submit" class="btn btn-primary">Create account</button>
-        </form>
-      {smallErrorMessage}
+        <br></br>
+        <div class="jumbotron title">
+          <h1 class="display-4">The MeelReel</h1>
+          <p class="lead">Created By <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></p>
+        </div>
+        <div class="jumbotron">
+        <h4>Sign Up</h4>
+        {errorMessage}
+          <form class="container login_div" onSubmit={this.handleSubmit}>
+            <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} placeholder="Username" required autofocus=""></input>
+            <br></br>
+            <input type="password" id="password1" class="form-control" value={this.state.password1} onChange={this.handlePassword1Change} placeholder="Password" required></input>
+            <br></br>
+            <input type="password" id="password2" class="form-control" value={this.state.password2} onChange={this.handlePassword2Change} placeholder="Retype Password" required></input>
+            <br></br>
+            <button type="submit" class="btn btn-primary">Create account</button>
+            <br></br>
+            <br></br>
+            <p>Already have an account? <Link to="/login">Log in</Link></p>
+          </form>
+          {smallErrorMessage}
+        </div>
+        <footer id="sticky-footer" class="jumbotron py-4 text-white-50">
+      <div class="container text-center" id="footer-text">
+        <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
+      </div>
+    </footer>
       </div>
     );
   }

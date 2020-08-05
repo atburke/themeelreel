@@ -1,0 +1,20 @@
+.login_div{
+    margin: 0 auto;
+}
+
+.cols {
+    padding: 10px;
+}
+
+#sticky-footer {
+    flex-shrink: none;
+    
+ }
+
+ #footer-text {
+   color: black;
+ }
+
+ .title {
+     text-align: center;
+ }
