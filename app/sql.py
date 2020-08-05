@@ -26,32 +26,39 @@ def create_tables(connection):
                 #print(e)
     # Create triggers
     # trigger_update_avg(connection)
-    statement = text(
-    """
-    CREATE TRIGGER UpdateCost
-                    AFTER UPDATE ON Ingredient
-                    FOR EACH ROW
-                    BEGIN
-                            UPDATE Recipe
-                            SET Recipe_Cost = (
-                                    SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit)
-                                    FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name)
-                                    WHERE Recipe_Name = Requires.Recipe_Name
-                                    GROUP BY Recipe_Name
-                            )
-                            WHERE Recipe_Name IN (
-                                    SELECT Recipe_Name
-                                    FROM Requires
-                                    WHERE NEW.Ingredient_Name = Requires.Ingredient_Name
-                    );
-                    END;
-    """
-    )
-    try:
-        connection.execute(statement)
-    except OperationalError as e:
-        pass
+    #statement = text(
+    #"""
+    #CREATE TRIGGER UpdateCost
+    #                AFTER UPDATE ON Ingredient
+    #                FOR EACH ROW
+    #                BEGIN
+
+    #                );
+    #                END;
+    #"""
+    #)
+    #try:
+    #    connection.execute(statement)
+    #except OperationalError as e:
+    #    pass
         #print(e)
+
+
+def update_recipe_costs(db, ing_name):
+    statement = text(
+        "UPDATE Recipe "
+        "SET Recipe_Cost = ( "
+                "SELECT COALESCE(Requires.Required_Amount, 0) * SUM(Average_Price_Per_Unit) "
+                "FROM Requires LEFT OUTER JOIN Ingredient ON (Requires.Ingredient_Name = Ingredient.Ingredient_Name) "
+                "WHERE Recipe_Name = Requires.Recipe_Name "
+                "GROUP BY Recipe_Name "
+        ") "
+        "WHERE Recipe_Name IN ( "
+                "SELECT Recipe_Name "
+                "FROM Requires "
+                "WHERE :ingName = Requires.Ingredient_Name);"
+    )
+    db.execute(statement, {"ingName": ing_name})
 
 
 def clear_tables(connection):
@@ -284,6 +291,8 @@ def update_price_average(db, name):
         {"avg": update[0], "units": update[1], "name": name},
     )
 
+    update_recipe_costs(db, name)
+
 
 def delete_price_listing(db, name, source, time_created):
     statement = text(
@@ -325,7 +334,7 @@ def fetch_recipes(db, excludes=None):
         + "ORDER BY costPerCalorie"
     )
     results = db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
-    print(f"fetched {len(results)} recipes")
+    return results
 
 
 def fetch_ingredients_for_recipes(db, includes=None, excludes=None):

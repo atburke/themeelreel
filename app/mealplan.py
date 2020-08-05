@@ -56,6 +56,7 @@ def find_meals(
     excludes = [ing for ing, amount in max_ingredients.items() if amount.magnitude == 0]
 
     recipes = fetch_recipes(db, excludes)
+    print(recipes)
 
     minimum_plan_cost = (
         math.ceil(calories_needed / recipes[0].calories) * recipes[0].cost
