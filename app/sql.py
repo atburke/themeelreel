@@ -312,8 +312,8 @@ def get_units(db, kw):
 
 def fetch_recipes(db, excludes=None):
     excludes = excludes or []
-    constraint_str = (
-        "WHERE name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
+    constraint_str = "WHERE cost IS NOT NULL" (
+        "AND name NOT IN (SELECT Recipe_Name FROM Recipe NATURAL JOIN Requires WHERE Ingredient_Name IN :excludes) "
         if excludes
         else ""
     )
@@ -324,7 +324,8 @@ def fetch_recipes(db, excludes=None):
         + constraint_str
         + "ORDER BY costPerCalorie"
     )
-    return db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+    results = db.execute(statement, {"excludes": tuple(excludes)}).fetchall()
+    print(f"fetched {len(results)} recipes")
 
 
 def fetch_ingredients_for_recipes(db, includes=None, excludes=None):

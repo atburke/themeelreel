@@ -576,7 +576,8 @@ class PlanMealPage extends React.Component {
       },
       data: message
     }).then(response => {
-      this.setState({msg: response.data.msg});
+      this.setState({redirect: '/'});
+      //this.setState({msg: response.data.msg});
     }).catch(error => {
       this.setState({error: error.data.error});
     });
@@ -702,7 +703,8 @@ class PriceListingPage extends React.Component {
       newIngredientSource: '',
       newIngredientPrice: 0,
       newIngredientUnits: '',
-      redirect: ''
+      redirect: '',
+      msg: ''
     };
 
     if (this.props.location.state && this.props.location.state.token) {
@@ -880,7 +882,7 @@ class PriceListingPage extends React.Component {
     }).then(response => {
       this.setState({
         error: '',
-        message: `Price for ${newListing.ingredientName} successfully added!`
+        msg: `Price for ${newListing.ingredientName} successfully added!`
       });
     }).catch(error => {
       if (error.status === 401) {
@@ -977,6 +979,7 @@ class PriceListingPage extends React.Component {
         <hr />
         {form}
         {this.state.error}
+        {this.state.msg}
       </div>
     );
   }
