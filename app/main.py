@@ -284,12 +284,20 @@ def generate_meal_plan():
     print(data)
     budget = float(data["budget"])
     total_calories = int(data["days"]) * int(data["dailyCalories"])
-    min_ingredients = {
-        ing["name"]: Q_(float(ing["amount"]), ing["units"]) for ing in data["minIngredients"]
-    }
-    max_ingredients = {
-        ing["name"]: Q_(float(ing["amount"]), ing["units"]) for ing in data["maxIngredients"]
-    }
+    min_ingredients = {}
+    for ing in data["minIngredients"]:
+        try:
+            min_ingredients[ing["name"]] = Q_(float(ing["amount"]), ing["units"])
+        except Exception as e:
+            min_ingredients[ing["name"]] = Q_(float(ing["amount"]), "lb")
+
+    max_ingredients = {}
+    for ing in data["maxIngredients"]:
+        try:
+            max_ingredients[ing["name"]] = Q_(float(ing["amount"]), ing["units"])
+        except Exception as e:
+            max_ingredients[ing["name"]] = Q_(float(ing["amount"]), "lb")
+
     for quantity in min_ingredients.values():
         if quantity.magnitude < 0:
             abort(400)
