@@ -62,7 +62,7 @@ def update_recipe_costs(db, ing_name):
         ") "
         " WHERE Recipe_Name = :name;"
         )
-        db.execute(statement)
+        db.execute(statement, {"name": recipe.name})
 
 
 def clear_tables(connection):
