@@ -285,10 +285,10 @@ def generate_meal_plan():
     budget = float(data["budget"])
     total_calories = int(data["days"]) * int(data["dailyCalories"])
     min_ingredients = {
-        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["minIngredients"]
+        ing["name"]: Q_(float(ing["amount"]), ing["units"]) for ing in data["minIngredients"]
     }
     max_ingredients = {
-        ing["name"]: Q_(ing["amount"], ing["units"]) for ing in data["maxIngredients"]
+        ing["name"]: Q_(float(ing["amount"]), ing["units"]) for ing in data["maxIngredients"]
     }
     for quantity in min_ingredients.values():
         if quantity.magnitude < 0:
@@ -304,8 +304,9 @@ def generate_meal_plan():
             meals = find_meals(
                 db, budget, total_calories, min_ingredients, max_ingredients
             )
-        except (ValueError, RuntimeError):
-            return (jsonify({"error": "Cannot satisfy constraints"}), 400)
+        except (ValueError, RuntimeError) as e:
+            print(e)
+            return (jsonify({"error": str(e)}), 400)
 
         try:
             check_plan(
@@ -322,7 +323,7 @@ def generate_meal_plan():
 
 @app.route("/api/mealplan", methods=["DELETE"])
 @requires_token
-def delete_meal_plan():
+def delete_plan():
     db = get_db()
     data = request.get_json()
     delete_meal_plan(db, data["id"], g.user)

@@ -146,7 +146,7 @@ class LoginPage extends React.Component {
 
   render() {
     if (this.state.redirect) {
-      
+
       console.log(`redirecting to ${this.state.redirect}`);
       return <Redirect to={{
         pathname: this.state.redirect,
@@ -157,7 +157,6 @@ class LoginPage extends React.Component {
     let errorMessage = this.state.error ? <p>{this.state.error}</p> : <p></p>;
     return (
       <div>
-<<<<<<< HEAD
         <br></br>
         <div class="jumbotron title">
           <h1 class="display-4">The MeelReel</h1>
@@ -191,29 +190,12 @@ class LoginPage extends React.Component {
         </div>
       </div>
         </div>
-        
+
         <footer id="sticky-footer" class="jumbotron py-4 text-white-50">
       <div class="container text-center" id="footer-text">
         <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
       </div>
     </footer>
-=======
-      <p>Don't have an account? <Link to="/newaccount">Sign up</Link></p>
-      {errorMessage}
-        <form onSubmit={this.handleSubmit}>
-          <div class="form-row">
-            <div class="col-md-6">
-              <label htmlFor="username">Username</label>
-              <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
-            </div>
-            <div class="col-md-6">
-              <label htmlFor="password">Password</label>
-              <input type="password" id="password" class="form-control" value={this.state.password} onChange={this.handlePasswordChange} />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary">Log in</button>
-        </form>
->>>>>>> master
       </div>
     );
   }
@@ -299,7 +281,6 @@ class CreateAccountPage extends React.Component {
     let smallErrorMessage = this.state.smallError ? <p>{this.state.smallError}</p> : <p></p>;
     return (
       <div>
-<<<<<<< HEAD
         <br></br>
         <div class="jumbotron title">
           <h1 class="display-4">The MeelReel</h1>
@@ -327,26 +308,6 @@ class CreateAccountPage extends React.Component {
         <small>Copyright &copy; 2020 <a href="https://wiki.illinois.edu/wiki/display/CS411SU20/Big+Data+Energy" target="_blank">Big Data Energy</a></small>
       </div>
     </footer>
-=======
-      <p>Already have an account? <Link to="/login">Log in</Link></p>
-      {errorMessage}
-        <form onSubmit={this.handleSubmit}>
-          <div class="form-group">
-            <label htmlFor="username">Username</label>
-            <input type="text" id="username" class="form-control" value={this.state.username} onChange={this.handleUsernameChange} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="password1">Password</label>
-            <input type="password" id="password1" class="form-control" value={this.state.password1} onChange={this.handlePassword1Change} />
-          </div>
-          <div class="form-group">
-            <label htmlFor="password2">Retype Password</label>
-            <input type="password" id="password2" class="form-control" value={this.state.password2} onChange={this.handlePassword2Change} />
-          </div>
-          <button type="submit" class="btn btn-primary">Create account</button>
-        </form>
-      {smallErrorMessage}
->>>>>>> master
       </div>
     );
   }
@@ -537,7 +498,7 @@ class PlanMealPage extends React.Component {
   }
 
   setCalories(e) {
-    this.setState({calories: e.target.value});
+    this.setState({dailyCalories: e.target.value});
   }
 
   setDays(e) {
@@ -576,9 +537,9 @@ class PlanMealPage extends React.Component {
           });
         }, 400);
       }
+      this.ingFn();
     });
 
-    this.ingFn();
   }
 
   updateUnitSearch(e) {
@@ -601,9 +562,9 @@ class PlanMealPage extends React.Component {
           });
         }, 400);
       }
+      this.unitFn();
+      
     });
-
-    this.unitFn();
 
   }
 
@@ -661,6 +622,7 @@ class PlanMealPage extends React.Component {
       minIngredients: this.state.minIngredients,
       maxIngredients: this.state.maxIngredients
     };
+    console.log(message);
 
     axios({
       method: 'post',
@@ -725,7 +687,7 @@ class PlanMealPage extends React.Component {
             </div>
             <div class="form-group col-md-6">
               <label htmlFor="calories">Daily Calories</label>
-              <input id="calories" type="number" min="0" class="form-control" value={this.state.calories} onChange={this.setCalories} />
+              <input id="calories" type="number" min="0" class="form-control" value={this.state.dailyCalories} onChange={this.setCalories} />
             </div>
             <div class="form-group col-md-6">
               <label htmlFor="days">Days</label>

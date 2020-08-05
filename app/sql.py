@@ -377,7 +377,11 @@ def fetch_ingredients_for_recipes(db, includes=None, excludes=None):
     ingredient_map = defaultdict(dict)
     for recipe_name, ingredients in itertools.groupby(results, key=lambda x: x.name):
         for ing in ingredients:
-            ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, ing.units)
+            try:
+                ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, ing.units)
+
+            except Exception as e:
+                ingredient_map[recipe_name][ing.ingredientName] = Q_(ing.amount, "lb")
 
     return ingredient_map
 
@@ -400,7 +404,10 @@ def add_meal_plan_for_user(db, username, plan, title=None):
         "SELECT MIN(Meal_Plan_ID) AS minID, MAX(Meal_Plan_ID) AS maxID "
         "FROM Meal_Plan"
     )
-    min_id, max_id = db.execute(statment).fetchall()[0]
+    min_id_str, max_id_str = db.execute(statement).fetchall()[0]
+    min_id = int(min_id_str) if min_id_str else 0
+    max_id = int(max_id_str) if max_id_str else 0
+
     plan_id = min_id - 1 if min_id > 1 else max_id + 1
     now = datetime.datetime.now()
     if not title:
@@ -415,7 +422,7 @@ def add_meal_plan_for_user(db, username, plan, title=None):
                 "INSERT INTO Consists_Of " "VALUES (:name, :id, :day, :order)"
             )
             db.execute(
-                statment, {"name": recipe.name, "id": plan_id, "day": i, "order": j}
+                statement, {"name": recipe.name, "id": plan_id, "day": i, "order": j}
             )
 
 
@@ -431,10 +438,10 @@ def fetch_meal_plans_for_user(db, username):
     for plan in plans:
         new_plan = {"id": plan.id, "name": plan.title, "timeCreated": plan.timeCreated}
         statement = text(
-            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, MealOrder AS order "
+            "SELECT R.Recipe_Name AS name, Image_URL AS imageURL, Recipe_URL AS recipeURL, Recipe_Cost AS cost, Calories as calories, Day AS day, MealOrder "
             "FROM Recipe R JOIN Consists_Of C ON R.Recipe_Name = C.Recipe_Name "
             "WHERE Meal_Plan_ID = :id "
-            "ORDER BY day, order"
+            "ORDER BY day, MealOrder"
         )
         recipes = db.execute(statement, {"id": plan.id}).fetchall()
         new_plan["recipes"] = [[] for _ in range(max(r.day for r in recipes))]
@@ -449,10 +456,10 @@ def fetch_meal_plans_for_user(db, username):
             new_plan["recipes"][recipe.day - 1].append(recipe_listing)
 
         new_plan["totalCost"] = sum(
-            r.cost for r in itertools.chain.from_iterable(new_plan["recipes"])
+            r["cost"] for r in itertools.chain.from_iterable(new_plan["recipes"])
         )
         new_plan["totalCalories"] = sum(
-            r.calories for r in itertools.chain.from_iterable(new_plan["recipes"])
+            r["calories"] for r in itertools.chain.from_iterable(new_plan["recipes"])
         )
         results.append(new_plan)
 
