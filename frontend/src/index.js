@@ -351,10 +351,10 @@ function MealPlan(props) {
       <div class="card-body">
         <h5 class="card-title">{props.name}</h5>
         <div class="container">
-          <p class="card-text row">
-            <div>Created {props.timeCreated}</div>
-            <div>Cost: ${props.totalCost}</div>
-            <div>Total Calories: {props.totalCalories} ({props.totalCalories / props.recipes.length} calories per day)</div>
+          <p class="card-text">
+            <p>Created {props.timeCreated}</p>
+            <p>Cost: ${props.totalCost}</p>
+            <p>Total Calories: {props.totalCalories} ({props.totalCalories / props.recipes.length} calories per day)</p>
           </p>
         </div>
         <hr />
