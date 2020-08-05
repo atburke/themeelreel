@@ -29,11 +29,23 @@ def check_plan(db, meals, budget, cals, min_ingredients=None, max_ingredients=No
         ingredient_map = fetch_ingredients_for_recipes(db)
         if min_ingredients:
             for ing, amount in min_ingredients.items():
-                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) >= amount
+                s = 0
+                for r in meals:
+                    try:
+                        s += ingredient_map[r.name].get(ing, 0)
+                    except:
+                        pass
+                assert s >= amount
 
         if max_ingredients:
             for ing, amount in max_ingredients.items():
-                assert sum(ingredient_map[r.name].get(ing, 0) for r in meals) <= amount
+                s = 0
+                for r in meals:
+                    try:
+                        s += ingredient_map[r.name].get(ing, 0)
+                    except:
+                        pass
+                assert s <= amount
 
 
 def find_meals(
