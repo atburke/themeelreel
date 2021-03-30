@@ -64,7 +64,7 @@ prompt-toolkit==2.0.9
 ptyprocess==0.6.0
 pycodestyle==2.5.0
 pygame==1.9.4
-Pygments==2.4.2
+Pygments==2.7.4
 PyJWT==1.7.1
 pylint==2.2.2
 pyobjc==5.1.2
