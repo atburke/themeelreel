@@ -65,7 +65,7 @@ ptyprocess==0.6.0
 pycodestyle==2.5.0
 pygame==1.9.4
 Pygments==2.4.2
-PyJWT==1.7.1
+PyJWT==2.4.0
 pylint==2.2.2
 pyobjc==5.1.2
 pyobjc-core==5.1.2
